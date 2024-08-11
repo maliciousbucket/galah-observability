@@ -1,0 +1,55 @@
+declare "jaeger_collector" {
+	argument "forward_to" {
+		optional = true
+	}
+
+	argument "grpc_endpoint" {
+		optional = true
+		default  = "0.0.0.0:14520"
+	}
+
+	argument "grpc_transport" {
+		optional = true
+		default  = "tcp"
+	}
+
+	argument "thrift_http_endpoint" {
+		optional = true
+		default  = "0.0.0.0:14268"
+	}
+
+	argument "thrift_binary_endpoint" {
+		optional = true
+		default  = "0.0.0.0:6832"
+	}
+
+	argument "thrift_compact_endpoint" {
+		optional = true
+		default  = "0.0.0.0:6831"
+	}
+
+	otelcol.receiver.jaeger "jaeger" {
+		protocols {
+			grpc {
+				endpoint  = coalesce(argument.grpc_endpoint.value, "0.0.0.0:14520")
+				transport = coalesce(argument.grpc_transport.value, "tcp")
+			}
+
+			thrift_http {
+				endpoint = coalesce(argument.thrift_http_endpoint.value, "0.0.0.0:14268")
+			}
+
+			thrift_binary {
+				endpoint = coalesce(argument.thrift_binary_endpoint.value, "0.0.0.0:6832")
+			}
+
+			thrift_compact {
+				endpoint = coalesce(argument.thrift_compact_endpoint.value, "0.0.0.0:6831")
+			}
+		}
+
+		output {
+			traces = argument.forward_to.value
+		}
+	}
+}

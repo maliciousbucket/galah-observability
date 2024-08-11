@@ -1,0 +1,68 @@
+declare "otlp_collector" {
+	argument "metrics_forward_to" {
+		optional = false
+		comment  = "Must be a list(MetricReceiver) where collected metrics are sent"
+	}
+
+	argument "traces_forward_to" {
+		optional = false
+		comment  = "Must be a list(otelcol.Consumer) where collected logs are sent"
+	}
+
+	argument "traces_forward_to" {
+		optional = false
+		comment  = "Must be a list(otelcol.Consumer) where collected traces are sent"
+	}
+
+	argument "grpc_endpoint" {
+		optional = true
+		default  = "0.0.0.0:4317"
+	}
+
+	argument "grpc_transport" {
+		optional = true
+		default  = "tcp"
+	}
+
+	argument "http_endpoint" {
+		optional = true
+		default  = "0.0.0.0:4318"
+	}
+
+	argument "metrics_url_path" {
+		optional = true
+		default  = "/v1/metrics"
+	}
+
+	argument "logs_url_path" {
+		optional = true
+		default  = "/v1/logs"
+	}
+
+	argument "traces_url_path" {
+		optional = true
+		default  = "/v1/traces"
+	}
+
+	otelcol.receiver.otlp "otlp_collector" {
+		grpc {
+			endpoint  = coalesce(argument.grpc_endpoint.value, "0.0.0.0:4317")
+			transport = argument.transport.value
+		}
+
+		http {
+			endpoint         = coalesce(argument.http_endpoint.value, "0.0.0.0:4318")
+			metrics_url_path = argument.metrics_url_path.value
+			logs_url_path    = argument.logs_url_path.value
+			traces_url_path  = argument.traces_url_path.value
+		}
+
+		output {
+			metrics = argument.metrics_forward_to.value
+			logs    = argument.logs_forward_to.value
+			traces  = argument.traces_forward_to.value
+		}
+
+		debug_metrics { }
+	}
+}

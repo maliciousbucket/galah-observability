@@ -1,0 +1,66 @@
+declare "self_hosted_stack" {
+	argument "metrics_endpoint" {
+		optional = true
+	}
+
+	argument "logs_endpoint" {
+		optional = true
+	}
+
+	argument "traces_endpoint" {
+		optional = true
+	}
+
+	prometheus.remote_write "self_hosted" {
+		endpoint {
+			url                    = argument.metrics_endpoint.value
+			send_native_histograms = true
+
+			basic_auth {
+				password_file = coalesce(env("METRICS_BASIC_AUTH_PASSWORD_FILE"), env("BASIC_AUTH_PASSWORD_FILE"))
+				password      = coalesce(env("METRICS_BASIC_AUTH_PASSWORD"), env("BASIC_AUTH_PASSWORD"))
+				username      = coalesce(env("METRICS_BASIC_AUTH_USERNAME"), env("BASIC_AUTH_USERNAME"))
+			}
+		}
+	}
+
+	loki.write "self_hosted" {
+		endpoint {
+			url = argument.logs_endpoint.value
+
+			basic_auth {
+				password_file = coalesce(env("LOGS_BASIC_AUTH_PASSWORD_FILE"), env("BASIC_AUTH_PASSWORD_FILE"))
+				password      = coalesce(env("LOGS_BASIC_AUTH_PASSWORD"), env("BASIC_AUTH_PASSWORD"))
+				username      = coalesce(env("LOGS_BASIC_AUTH_USERNAME"), env("BASIC_AUTH_USERNAME"))
+			}
+		}
+	}
+
+	otelcol.auth.basic "self_hosted" {
+		username = coalesce(env("TRACES_BASIC_AUTH_USERNAME"), env("BASIC_AUTH_USERNAME"))
+		password = coalesce(env("TRACES_BASIC_AUTH_PASSWORD"), env("BASIC_AUTH_PASSWORD"))
+	}
+
+	otelcol.exporter.otlp "self_hosted" {
+		client {
+			endpoint = argument.traces_endpoint.value
+
+			tls {
+				insecure             = true
+				insecure_skip_verify = true
+			}
+		}
+	}
+
+	export "metrics_receiver" {
+		value = prometheus.remote_write.self_hosted.receiver
+	}
+
+	export "logs_receiver" {
+		value = loki.write.self_hosted.receiver
+	}
+
+	export "traces_receiver" {
+		value = otelcol.processor.batch.self_hosted.input
+	}
+}

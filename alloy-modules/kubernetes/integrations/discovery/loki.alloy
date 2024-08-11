@@ -1,0 +1,70 @@
+declare "integrations_loki" {
+	argument "forward_to" {
+		optional = true
+	}
+
+	//Discovery Args
+
+	argument "namespaces" {
+		optional = true
+		default  = []
+	}
+
+	argument "field_selectors" {
+		optional = true
+		default  = []
+	}
+
+	argument "label_selectors" {
+		optional = true
+		default  = ["app.kubernetes.io/name=loki"]
+	}
+	//Set
+	argument "port_name" {
+		optional = true
+		default  = "http-metrics"
+	}
+	//metrics args
+	argument "keep_metrics" {
+		optional = true
+	}
+
+	argument "drop_metrics" {
+		optional = true
+	}
+
+	argument "scrape_interval" {
+		optional = true
+	}
+
+	argument "scrape_timeout" {
+		optional = true
+	}
+
+	argument "max_cache_size" {
+		optional = true
+	}
+
+	argument "clustering" {
+		optional = true
+	}
+
+	integrations_discovery "loki" {
+		namespaces      = argument.namespaces.value
+		field_selectors = argument.field_selectors.value
+		label_selectors = argument.label_selectors.value
+		port_name       = argument.port_name.value
+	}
+
+	integrations.scrape "loki" {
+		targets         = integrations_discovery.loki.output
+		forward_to      = argument.forward_to.value
+		job_label       = "integrations/loki"
+		keep_metrics    = argument.keep_metrics.value
+		drop_metrics    = argument.drop_metrics.value
+		scrape_interval = argument.scrape_interval.value
+		scrape_timeout  = argument.scrape_timeout.value
+		max_cache_size  = argument.max_cache_size.value
+		clustering      = argument.clustering.value
+	}
+}

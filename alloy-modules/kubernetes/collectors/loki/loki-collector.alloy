@@ -1,0 +1,35 @@
+declare "loki_collector" {
+	argument "forward_to" {
+		optional = true
+	}
+
+	argument "listen_address" {
+		optional = true
+		default  = ""
+	}
+
+	argument "listen_port" {
+		optional = true
+		default  = 8080
+	}
+
+	argument "labels" {
+		optional = true
+		default  = {}
+	}
+
+	argument "relabel_rules" {
+		optional = true
+		default  = {}
+	}
+
+	loki.source.api "receive_loki" {
+		http {
+			listen_address = coalesce(argument.listen_address.value, "")
+			listen_port    = coalesce(argument.listen_ports.value, 8080)
+		}
+		labels        = coalesce(argument.labels.value, {})
+		relabel_rules = coalesce(argument.relabel_rules.value, {})
+		forward_to    = argument.forward_to.value
+	}
+}
