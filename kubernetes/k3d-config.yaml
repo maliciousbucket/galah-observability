@@ -1,0 +1,43 @@
+apiVersion: k3d.io/v1alpha5
+kind: Simple
+metadata:
+  name: galah-monitoring
+servers: 1
+agents: 2
+kubeAPI:
+  hostIP: "127.0.0.1"
+  hostPort: "6445"
+image: rancher/k3s:v1.22.2-k3s1
+ports:
+  - port: 8080:80 # same as `--port '8080:80@loadbalancer'`
+    nodeFilters:
+      - loadbalancer
+  - port: 0.0.0.0:8443:443
+    nodeFilters:
+      - loadbalancer
+files:
+- description: "Pre-installed Prometheus Operator CRDs"
+  source: prom-operator-crds/manifests/config.yaml
+  destination: k3s-manifests-custom/prometheus-operator-crds-config.yaml
+
+registries:
+  create:
+    name: k3d-reg-docker-io
+    hostPort: "5000"
+    proxy:
+      remoteURL: https://registry-1.docker.io # proxy DockerHub
+    volumes:
+      - /tmp/reg-docker-io:/var/lib/registry # persist data locally in /tmp/reg-docker-io
+  config: |
+    mirrors:
+      "docker.io":
+        endpoint:
+        - http://host.k3d.internal:5000
+        - http://k3d-reg-docker-io:5000
+options:
+  k3d:
+    wait: true
+    timeout: "60s"
+    disableLoadbalancer: false
+    disableImageVolume: false
+    disableRollback: false

@@ -17,6 +17,7 @@ $(LOCALBIN):
 
 ## Tool Binaries
 KUBECTL ?= kubectl
+K3D ?= k3d
 KUSTOMIZE ?= $(LOCALBIN)/kustomize
 
 ## Tool Versions
@@ -28,6 +29,20 @@ KUSTOMIZE_VERSION ?= v5.4.3
 kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary.
 $(KUSTOMIZE): $(LOCALBIN)
     $(call go-install-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v5,$(KUSTOMIZE_VERSION))
+
+
+.PHONY: fmt
+fmt:
+	@echo "Linting Alloy Files"
+	@bash ./tools/lint-alloy.sh
+
+
+.PHONY: cluster
+cluster:
+	$(K3D) cluster create galah-monitoring --config kubernetes/k3d-config.yaml
+clean:
+	$(k3D) cluster delete galah-monitoring
+
 
 define go-install-tool
 @[ -f "$(1)-$(3)" ] || { \
