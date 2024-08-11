@@ -1,0 +1,35 @@
+declare "keep_labels" {
+	argument "forward_to" {
+		comment = "Must be a list(LogsReceiver) where collected logs should be forwarded to"
+	}
+
+	argument "keep_labels" {
+		optional = true
+		comment  = "List of labels to keep before the log message is written to Loki"
+		default  = [
+			"app",
+			"cluster",
+			"component",
+			"container",
+			"env",
+			"job",
+			"level",
+			"namespace",
+			"region",
+			"service",
+			"workload",
+		]
+	}
+
+	export "receiver" {
+		value = loki.process.keep_labels.receiver
+	}
+
+	loki.process "keep_labels" {
+		forward_to = argument.forward_to.value
+
+		stage.label_keep {
+			values = argument.keep_labels.value
+		}
+	}
+}
