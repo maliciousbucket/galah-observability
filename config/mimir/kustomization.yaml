@@ -1,0 +1,43 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: galah-monitoring
+
+labels:
+  - includeSelectors: true
+    pairs:
+      app.kubernetes.io/component: mimir
+      app.kubernetes.io/instance: mimir
+      app.kubernetes.io/name: mimir
+  - includeSelectors: false
+    pairs:
+      app.kubernetes.io/managed-by: Kustomize
+      app.kubernetes.io/version: 2.13.0
+
+images:
+  - name: docker.io/grafana/mimir
+    newName: docker.io/grafana/mimir-alpine
+    newTag: 2.13.0
+
+resources:
+  - service.yaml
+  - mimir-memberlist-service.yaml
+  - rbac.yaml
+  - deployment.yaml
+  - mimir-servicemonitor.yaml
+
+replicas:
+  - name: mimir
+    count: 1
+
+# TODO: Secret Generator
+# TODO: Env files
+
+configMapGenerator:
+  - name: mimir-config
+    files:
+      - configs/mimir.yaml
+      - configs/runtime.yaml
+      - alert_manager_fallback_config=configs/alertmanager-fallback-config.yaml
+#    envs:
+#      - .env

@@ -1,0 +1,27 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: mimir
+spec:
+  endpoints:
+  - port: http-metrics
+    relabelings:
+    - replacement: galah-monitoring/mimir
+      sourceLabels:
+      - job
+      targetLabel: job
+    scheme: http
+  namespaceSelector:
+    matchNames:
+    - galah-monitoring
+  selector:
+    matchExpressions:
+    - key: prometheus.io/service-monitor
+      operator: NotIn
+      values:
+      - "false"
+    matchLabels:
+      app.kubernetes.io/component: mimir
+      app.kubernetes.io/instance: mimir
+      app.kubernetes.io/name: mimir
