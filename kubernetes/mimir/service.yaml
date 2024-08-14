@@ -8,4 +8,4 @@ spec:
     - port: 9090
       name: http-metrics
     - port: 9095
-      name: grpc-distributor
+      name: grpc-dist

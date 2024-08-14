@@ -25,6 +25,7 @@ resources:
   - rbac.yaml
   - deployment.yaml
   - mimir-servicemonitor.yaml
+  - namespace.yaml
 
 replicas:
   - name: mimir
@@ -36,8 +37,9 @@ replicas:
 configMapGenerator:
   - name: mimir-config
     files:
-      - configs/mimir.yaml
-      - configs/runtime.yaml
-      - alert_manager_fallback_config=configs/alertmanager-fallback-config.yaml
+      - ../../config/mimir/configs/mimir.yaml
+      - ../../config/mimir/configs/runtime.yaml
+      - alert_manager_fallback_config=../../config/mimir/configs/alertmanager-fallback-config.yaml
+    namespace: galah-monitoring
 #    envs:
 #      - .env

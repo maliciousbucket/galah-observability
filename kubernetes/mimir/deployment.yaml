@@ -28,6 +28,8 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: status.podIP
+          image: docker.io/grafana/mimir:2.13.0
+          imagePullPolicy: IfNotPresent
           name: mimir
           resources:
             requests:
@@ -40,7 +42,7 @@ spec:
             - containerPort: 9090
               name: http-metrics
             - containerPort: 9095
-              name: grpc-distributor
+              name: grpc-dist
             - containerPort: 7946
               name: http-memberlist
           readinessProbe:

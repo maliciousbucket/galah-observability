@@ -17,18 +17,28 @@ $(LOCALBIN):
 
 ## Tool Binaries
 KUBECTL ?= kubectl
-K3D ?= k3d
+K3D ?= $(LOCALBIN)/k3d
 KUSTOMIZE ?= $(LOCALBIN)/kustomize
 
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v5.4.3
+K3D_VERSION ?= v5.7.3
 
 
 
 .PHONY: kustomize
-kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary.
+kustomize: $(KUSTOMIZE)
 $(KUSTOMIZE): $(LOCALBIN)
-    $(call go-install-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v5,$(KUSTOMIZE_VERSION))
+	$(call go-install-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v5,$(KUSTOMIZE_VERSION))
+
+##@Hello
+
+
+
+.PHONY: k3d
+k3d: $(K3D)
+$(K3D): $(LOCALBIN)
+	$(call go-install-tool,$(K3D),github.com/k3d-io/k3d/v5,$(K3D_VERSION))
 
 
 .PHONY: fmt
@@ -39,9 +49,10 @@ fmt:
 
 .PHONY: cluster
 cluster:
+	@echo "Using K3D: $(K3D)"
 	$(K3D) cluster create galah-monitoring --config kubernetes/k3d-config.yaml
 clean:
-	$(k3D) cluster delete galah-monitoring
+	$(K3D) cluster delete galah-monitoring
 
 
 define go-install-tool
