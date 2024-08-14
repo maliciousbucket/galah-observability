@@ -1,0 +1,5 @@
+prometheusScrape: false
+
+autosharding:
+  enabled: false
+updateStrategy: Recreate
