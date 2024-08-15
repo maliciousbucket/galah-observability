@@ -9,7 +9,7 @@ helmCharts:
     namespace: galah-monitoring
     includeCRDs: false
 
-    valuesFile: values.yaml
+    valuesFile: k3d-values.yaml
 images:
   - name: docker.io/grafana/grafana
     newTag: 11.1.3
