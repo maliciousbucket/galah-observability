@@ -1,0 +1,299 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: galah-tracing
+---
+apiVersion: v1
+automountServiceAccountToken: true
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/instance: tempo
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: tempo
+    app.kubernetes.io/version: 2.5.0
+    helm.sh/chart: tempo-1.10.3
+  name: tempo
+  namespace: galah-tracing
+---
+apiVersion: v1
+data:
+  overrides.yaml: |
+    overrides:
+      {}
+  tempo.yaml: |
+    multitenancy_enabled: false
+    usage_report:
+      reporting_enabled: false
+    compactor:
+      compaction:
+        block_retention: 24h
+    distributor:
+      receivers:
+            jaeger:
+              protocols:
+                grpc:
+                  endpoint: 0.0.0.0:14250
+                thrift_binary:
+                  endpoint: 0.0.0.0:6832
+                thrift_compact:
+                  endpoint: 0.0.0.0:6831
+                thrift_http:
+                  endpoint: 0.0.0.0:14268
+            otlp:
+              protocols:
+                grpc:
+                  endpoint: 0.0.0.0:4317
+                http:
+                  endpoint: 0.0.0.0:4318
+    ingester:
+          {}
+    server:
+          grpc_listen_port: 3205
+          http_listen_port: 3200
+    storage:
+          trace:
+            backend: local
+            local:
+              path: /var/tempo/traces
+            wal:
+              path: /var/tempo/wal
+    querier:
+          {}
+    query_frontend:
+          {}
+    overrides:
+          per_tenant_override_config: /conf/overrides.yaml
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/instance: tempo
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: tempo
+    app.kubernetes.io/version: 2.5.0
+    helm.sh/chart: tempo-1.10.3
+  name: tempo
+  namespace: galah-tracing
+---
+apiVersion: v1
+data:
+  tempo.yaml: "stream_over_http_enabled: true\nserver:\n  http_listen_port: 3200\n#
+    \ grpc_listen_port: 3205\n\n  log_level: info\n\n\ndistributor:\n  receivers:\n
+    \   otlp:\n      protocols:\n        http:\n        grpc:\n          endpoint:
+    0.0.0.0:3205\n    jaeger:\n      protocols:\n        thrift_http:\n        grpc:\n
+    \       thrift_binary:\n        thrift_compact:\n    zipkin:\n    \n\n# From example,
+    will need adjusting.\nquery_frontend:\n  search:\n    duration_slo: 5s\n    throughput_bytes_slo:
+    1.073741824e+09\n  trace_by_id:\n    duration_slo: 5s\n\n\nmetrics_generator:\n
+    \ registry:\n    external_labels:\n      source: tempo\n      collection_interval:
+    5s\n  storage:\n    path: /var/tempo/wal\n    remote_write:\n#      TODO: Change
+    to alloy remote write\n      - url: http://mimir:9090/api/v1/push\n        send_exemplars:
+    true\n  traces_storage:\n    path: /var/tempo/traces\n  processor:\n    service_graphs:\n
+    \     dimensions:\n        - http.method\n        - http.target\n        - http.status_code\n
+    \   span_metrics:\n      dimensions:\n        - http.method\n        - http.target\n
+    \       - http.status_code\n        - service.name\n        - span.name\n        -
+    span.kind\n        - status.code\n\n\n\ningester:\n  max_block_duration: 5m\n\ncompactor:\n
+    \ compaction:\n    block_retention: 4h       # May need to be kept for longer\n\nstorage:\n
+    \ trace:\n    backend: local\n    wal:\n      path: /var/tempo/wal\n    local:\n
+    \     path: /var/tempo/blocks\n\noverrides:\n  defaults:\n    metrics_generator:\n
+    \     processors: ['local-blocks', 'span-metrics', 'service-graphs']\n\n"
+kind: ConfigMap
+metadata:
+  name: tempo-config
+  namespace: galah-tracing
+---
+apiVersion: v1
+data: {}
+kind: Secret
+metadata:
+  name: tempo-env-46f8b28mk5
+  namespace: galah-tracing
+type: Opaque
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: galah-tempo
+  namespace: galah-tracing
+spec:
+  ports:
+  - name: http-metrics
+    port: 3200
+  - appProtocol: grpc
+    name: grpc
+    port: 3205
+    targetPort: 3205
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/instance: tempo
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: tempo
+    app.kubernetes.io/version: 2.5.0
+    helm.sh/chart: tempo-1.10.3
+  name: tempo
+  namespace: galah-tracing
+spec:
+  ports:
+  - name: tempo-prom-metrics
+    port: 3100
+    targetPort: 3100
+  - name: tempo-jaeger-thrift-compact
+    port: 6831
+    protocol: UDP
+    targetPort: 6831
+  - name: tempo-jaeger-thrift-binary
+    port: 6832
+    protocol: UDP
+    targetPort: 6832
+  - name: tempo-jaeger-thrift-http
+    port: 14268
+    protocol: TCP
+    targetPort: 14268
+  - name: grpc-tempo-jaeger
+    port: 14250
+    protocol: TCP
+    targetPort: 14250
+  - name: tempo-zipkin
+    port: 9411
+    protocol: TCP
+    targetPort: 9411
+  - name: tempo-otlp-legacy
+    port: 55680
+    protocol: TCP
+    targetPort: 55680
+  - name: tempo-otlp-http-legacy
+    port: 55681
+    protocol: TCP
+    targetPort: 4318
+  - name: grpc-tempo-otlp
+    port: 4317
+    protocol: TCP
+    targetPort: 4317
+  - name: tempo-otlp-http
+    port: 4318
+    protocol: TCP
+    targetPort: 4318
+  - name: tempo-opencensus
+    port: 55678
+    protocol: TCP
+    targetPort: 55678
+  selector:
+    app.kubernetes.io/instance: tempo
+    app.kubernetes.io/name: tempo
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app.kubernetes.io/instance: tempo
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: tempo
+    app.kubernetes.io/version: 2.5.0
+    helm.sh/chart: tempo-1.10.3
+  name: tempo
+  namespace: galah-tracing
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: tempo
+      app.kubernetes.io/name: tempo
+  serviceName: tempo-headless
+  template:
+    metadata:
+      annotations:
+        checksum/config: ec73a8559161a085560bfee98ab0448b538b1f462f53795b9ce6a78436470fe8
+        logs.grafana.com/scrape: "true"
+        logs.grafana.com/scrub-level: info
+      labels:
+        app.kubernetes.io/instance: tempo
+        app.kubernetes.io/name: tempo
+    spec:
+      automountServiceAccountToken: true
+      containers:
+      - args:
+        - -config.file=/conf/tempo.yaml
+        - -mem-ballast-size-mbs=1024
+        env: null
+        image: grafana/tempo:2.5.0
+        imagePullPolicy: IfNotPresent
+        name: tempo
+        ports:
+        - containerPort: 3100
+          name: prom-metrics
+        - containerPort: 6831
+          name: jaeger-thrift-c
+          protocol: UDP
+        - containerPort: 6832
+          name: jaeger-thrift-b
+          protocol: UDP
+        - containerPort: 14268
+          name: jaeger-thrift-h
+        - containerPort: 14250
+          name: jaeger-grpc
+        - containerPort: 9411
+          name: zipkin
+        - containerPort: 55680
+          name: otlp-legacy
+        - containerPort: 4317
+          name: otlp-grpc
+        - containerPort: 55681
+          name: otlp-httplegacy
+        - containerPort: 4318
+          name: otlp-http
+        - containerPort: 55678
+          name: opencensus
+        resources:
+          limits:
+            cpu: 999m
+            memory: 1Gi
+          requests:
+            cpu: 100m
+            memory: 256Mi
+        volumeMounts:
+        - mountPath: /conf
+          name: tempo-conf
+      securityContext:
+        fsGroup: 10001
+        runAsGroup: 10001
+        runAsNonRoot: true
+        runAsUser: 10001
+      serviceAccountName: tempo
+      volumes:
+      - configMap:
+          name: tempo
+        name: tempo-conf
+  updateStrategy:
+    type: RollingUpdate
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: tempo
+  namespace: galah-tracing
+spec:
+  endpoints:
+  - interval: 15s
+    port: http-metrics
+    relabelings:
+    - action: replace
+      replacement: galah-tracing/tempo
+      sourceLabels:
+      - job
+    targetLabel: job
+  namespaceSelector:
+    matchNames:
+    - galah-tracing
+  scheme: http
+  selector:
+    matchExpressions:
+    - key: prometheus.io/service-monitor
+      operator: NotIn
+      values:
+      - "false"
+    matchLabels:
+      app.kubernetes.io/instance: tempo
+      app.kubernetes.op/name: tempo

@@ -1,0 +1,30 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: tempo
+  namespace: galah-tracing
+spec:
+  endpoints:
+  - interval: 15s
+    port: http-metrics
+    relabelings:
+    - action: replace
+      replacement: galah-tracing/tempo
+      sourceLabels:
+      - job
+    targetLabel: job
+  scheme: http
+  namespaceSelector:
+    matchNames:
+    - galah-tracing
+  selector:
+    matchExpressions:
+    - key: prometheus.io/service-monitor
+      operator: NotIn
+      values:
+      - "false"
+    matchLabels:
+      app.kubernetes.io/instance: tempo
+      app.kubernetes.op/name: tempo
+

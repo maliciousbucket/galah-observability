@@ -1,0 +1,26 @@
+podAnnotations:
+  logs.grafana.com/scrape: "true"
+  logs.grafana.com/scrub-level: "info"
+
+tempo:
+  multitenancyEnabled: false
+  reportingEnabled: false
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 999m
+      memory: 1Gi
+
+  server:
+
+    http_listen_port: 3200
+    grpc_listen_port: 3205
+
+
+extraEnvFrom:
+  - secretRef:
+      name: tempo-env
+

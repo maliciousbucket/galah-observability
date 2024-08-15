@@ -1,0 +1,10 @@
+apiVersion: builtin
+kind: ConfigMapGenerator
+metadata:
+  name: tempo-config
+  namespace: galah-tracing
+behaviour: replace
+files:
+  - configs/tempo.yaml
+options:
+  disableNameSuffixHash: true

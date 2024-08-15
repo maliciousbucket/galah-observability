@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: tempo
+  labels:
+    app.kubernetes.io/name: tempo
+  annotations:
+    prometheus.io/port: http-metrics
+    prometheus.io/scrape: "true"
+  namespace: galah-tracing
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: tempo
+  serviceName: tempo-headless
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: tempo
+    spec:
+      serviceAccountName: tempo
+#      TODO: Verify
+      automountServiceAccountToken: false
+      containers:
+        - name: tempo
+          image: docker.io/grafana/tempo:2.5.0
+          imagePullPolicy: IfNotPresent
+          args:
+            - -config.file=/conf/tempo.yaml
+            - -config.expand-env=true
+            - -target=all
+          ports:
+          - name: http-metrics
+            containerPort: 3200
+          - name: grpc
+            containerPort: 3205
+          - name: opencensus
+            containerPort: 55678
+          resources:
+            requests:
+              cpu: 50m
+              memory: "512mi"
+            limits:
+              cpu: 100m
+              memory: "1Gi"
+          volumeMounts:
+          - mountPath: /etc/tempo/config
+            name: config
+          - mountPath: /var/tempo/wal
+            subPath: wal
+            name: storage
+          - mountPath: /var/tempo/generator/wal
+            subPath: generator
+            name: storage
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+      volumes:
+        - name: storage
+          emptyDir:
+            sizeLimit: "10Gi"
+        - configMap:
+            name: tempo
+          name: tempo-config
+
+
+
+
