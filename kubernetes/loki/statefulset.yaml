@@ -1,0 +1,100 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app.kubernetes.io/part-of: memberlist
+  name: loki
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/part-of: memberlist
+  persistentVolumeClaimRetentionPolicy:
+#    This will probably need to be adjusted
+    whenDeleted: Delete
+    whenScaled: Delete
+  podManagementPolicy: Parallel
+  replicas: 1
+  serviceName: loki-headless
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/part-of: memberlist
+    spec:
+      containers:
+        - name: loki
+          image: docker.io/grafana/loki:v3.1.1
+          imagePullPolicy: IfNotPresent
+          args:
+          - config.file=/etc/loki/config/config.yaml
+          - target=all
+          - config.expand-env=true
+          envFrom:
+          - secretRef:
+             name: loki-env
+          ports:
+            - containerPort: 3100
+              name: http-metrics
+              protocol: TCP
+            - containerPort: 7946
+              name: http-memberlist
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              port: http-metrics
+              path: /ready
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 999m
+              memory: 1Gi
+          volumeMounts:
+            - mountPath: /tmp
+              name: tmp
+            - mountPath: /etc/loki/config
+              name: config
+            - mountPath: /var/loki
+              name: storage
+#              TODO: Runtime config?
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+      enableServiceLinks: true
+      serviceAccountName: loki
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        fsGroup: 10001
+        runAsGroup: 10001
+        runAsNonRoot: true
+        runAsUser: 10001
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: config
+          configMap:
+            items:
+            - key: config.yaml
+              path: config.yaml
+            name: loki-config
+  updateStrategy:
+    rollingUpdate:
+      partition: 0
+  volumeClaimTemplates:
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: storage
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 5Gi
+
+
+

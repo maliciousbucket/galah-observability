@@ -21,10 +21,10 @@ images:
 
 resources:
   - service.yaml
-  - mimir-memberlist-service.yaml
+  - memberlist-service.yaml
   - rbac.yaml
   - deployment.yaml
-  - mimir-servicemonitor.yaml
+  - servicemonitor.yaml
   - namespace.yaml
 
 replicas:

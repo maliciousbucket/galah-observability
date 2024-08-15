@@ -1,0 +1,108 @@
+auth_enabled: false
+
+server:
+  http_listen_port: 3100
+  grpc_listen_port: 3105
+  log_level: info
+
+#memberlist:
+#  join_members:
+#    - loki-memberlist:7946
+
+common:
+  compactor_address: http://loki:3100
+  # TODO: Set to env
+  instance_addr: 127.0.0.1
+  path_prefix: /loki
+
+  storage:
+    s3:
+      bucketnames: loki-data
+      endpoint: ${LOKI_S3_ENDPOINT:-minio:9000}
+      access_key_id: ${LOKI_S3_KEY_ID:-bucket}
+      secret_access_key: ${LOKI_S3_SECRET_ACCESS_KEY:-supersecret}
+      insecure: ${LOKI_S3_INSECURE:-true}
+      s3forcepathstyle: true
+      http_config:
+        insecure_skip_verify: true
+
+    # filesystem:
+    #   chunks_directory: /loki/chunks  
+    #   rules_directory: /loki/rules    
+  replication_factor: 1
+  
+  ring:
+    instance_addr: 127.0.0.1
+    #TODO: Look at other options
+    kvstore:
+      store: inmemory
+
+schema_config:
+  configs:
+    - from: 2024-08-12
+      store: tsdb
+      object_store: filesystem
+      schema: v13
+      
+      index:
+        prefix: index_
+        period: 24h
+
+storage_config:
+  tsdb_shipper:
+    active_index_directory: /loki/index
+    cache_location: /loki/index_cache
+  filesystem:
+    directory: /tmp/loki/chunks
+
+
+
+distributor:
+  ring:
+    instance_addr: 127.0.0.1
+    kvstore:
+      store: inmemory
+
+
+
+
+compactor:
+  retention_enabled: true
+  retention_delete_delay: 2h
+  delete_request_cancel_period: 24h
+  delete_request_store: s3
+  working_directory: /tmp/compactor
+
+
+query_range:
+  align_queries_with_step: true
+  cache_results: true
+
+query_scheduler:
+  max_outstanding_requests_per_tenant: 2048
+
+frontend:
+  max_outstanding_per_tenant: 2048
+
+ingester:
+  max_chunk_age: 8h
+  chunk_idle_period: 4h
+
+
+pattern_ingester:
+  enabled: true
+
+limits_config:
+  volume_enabled: true
+
+ruler:
+  #TODO: Set to env
+  alertmanager_url: ${ALERT_MANAGER_URL:-http://mimir:9090/alertmanager}
+  enable_api: true
+  storage:
+    s3:
+      bucketnames: loki-ruler
+    type: s3
+
+analytics:
+  reporting_enabled: false
