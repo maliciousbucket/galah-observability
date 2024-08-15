@@ -7,7 +7,7 @@ helmCharts:
     releaseName: cert-manager
     namespace: cert-manager
     includeCRDs: false
-    valuesFile: values.yaml
+    valuesFile: k3d-values.yaml
 resources:
   - namespace.yaml
   - self-signed-root-issuer.yaml
