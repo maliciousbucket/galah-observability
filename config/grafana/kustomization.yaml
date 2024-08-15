@@ -16,15 +16,15 @@ images:
 resources:
   - namespace.yaml
 configMapGenerator:
-  - name: grafana
+  - name: grafana-config
     files:
-      - ../../config/grafana/configs/grafana.ini
+      - configs/grafana.ini
   - name: grafana-datasources
     options:
       labels:
         grafana_datasource: "1"
     files:
-        - ../../config/grafana/configs/provisioning/datasources/datasources.yaml
+        - configs/provisioning/datasources/datasources.yaml
   - name: k6-prometheus.json
     options:
       labels:
@@ -32,7 +32,7 @@ configMapGenerator:
       annotations:
         grafana_dashboard_folder: "/dashboards"
     files:
-      - ../../config/grafana/configs/definitions/k6-prometheus.json
+      - configs/definitions/k6-prometheus.json
 secretGenerator:
   - name: grafana-secret
     literals:

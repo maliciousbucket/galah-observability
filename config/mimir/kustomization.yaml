@@ -37,9 +37,9 @@ replicas:
 configMapGenerator:
   - name: mimir-config
     files:
-      - ../../config/mimir/configs/mimir.yaml
-      - ../../config/mimir/configs/runtime.yaml
-      - alert_manager_fallback_config=../../config/mimir/configs/alertmanager-fallback-config.yaml
+      - configs/mimir.yaml
+      - configs/runtime.yaml
+      - alert_manager_fallback_config=configs/alertmanager-fallback-config.yaml
     namespace: galah-monitoring
 #    envs:
 #      - .env
