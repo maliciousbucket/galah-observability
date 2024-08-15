@@ -7,4 +7,4 @@ helmCharts:
     releaseName: kube-state-metrics
     namespace: galah-monitoring
     includeCRDs: false
-    valuesFile: values.yaml
+    valuesFile: k3d-values.yaml
