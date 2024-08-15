@@ -5,16 +5,32 @@ metadata:
 servers: 1
 agents: 2
 kubeAPI:
+#  host: localhost
   hostIP: "127.0.0.1"
   hostPort: "6445"
-image: rancher/k3s:v1.22.2-k3s1
+image: rancher/k3s:v1.30.3-k3s1
 ports:
-  - port: 8080:80 # same as `--port '8080:80@loadbalancer'`
+  - port: 8080:80
     nodeFilters:
-      - loadbalancer
-  - port: 0.0.0.0:8443:443
+    - loadbalancer
+#  - port: 80:8080
+#    nodeFilters:
+#      - loadbalancer
+#  - port: 8081:80 # same as `--port '8080:81@loadbalancer'`
+#    nodeFilters:
+#      - loadbalancer
+  - port: 8443:443
     nodeFilters:
-      - loadbalancer
+     - loadbalancer
+
+
+
+#env:
+#  - envVar: NO_PROXY=localhost,127.0.0.1
+#    nodeFilters:
+#      - server:0
+#      - agent:*
+
 files:
 - description: "Pre-installed Prometheus Operator CRDs"
   source: prom-operator-crds/manifests/config.yaml
@@ -23,9 +39,12 @@ files:
 registries:
   create:
     name: k3d-reg-docker-io
+    host: 0.0.0.0
     hostPort: "5000"
     proxy:
-      remoteURL: https://registry-1.docker.io # proxy DockerHub
+      remoteURL: https://registry-1.docker.io
+      username: ""
+      password: ""
     volumes:
       - /tmp/reg-docker-io:/var/lib/registry # persist data locally in /tmp/reg-docker-io
   config: |
@@ -41,3 +60,14 @@ options:
     disableLoadbalancer: false
     disableImageVolume: false
     disableRollback: false
+  kubeconfig:
+    updateDefaultKubeconfig: true
+    switchCurrentContext: true
+  k3s:
+    extraArgs:
+      - arg: --tls-san=127.0.0.1
+        nodeFilters:
+          - server:*
+    nodeLabels: []
+
+

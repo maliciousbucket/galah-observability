@@ -1,0 +1,162 @@
+configs:
+  alloy_config_file:
+    file: ../config/alloy/configs/config.alloy
+  tempo_config_file:
+    file: ../config/tempo/configs/tempo.yaml
+  loki_config_file:
+    file: ../config/loki/configs/loki.yaml
+  mimir_config_file:
+    file: ../config/mimir/configs/mimir.yaml
+  grafana_config_file:
+    file: ../config/grafana/configs/grafana.ini
+
+services:
+  alloy:
+    labels:
+      logs.grafana.com/log-format: logfmt
+    image: ${ALLOY_IMAGE:-docker.io/grafana/alloy:v1.3.0}
+    configs:
+      - source: alloy_config_file
+        target: /etc/alloy/config.alloy
+    volumes:
+      - "../alloy-modules:/etc/alloy/modules"
+    entrypoint:
+      - /bin/alloy
+      - run
+      - /etc/alloy/config.alloy
+      - --server.http.listen-addr=0.0.0.0:12345
+      # - --cluster.enabled=true
+      # - --cluster.join-addresses=alloy-cluster:12345
+      - --disable-reporting=true
+      - --stability.level=experimental
+      - --storage.path=/var/lib/alloy/data
+    #    environment:
+    #      -
+    ports:
+      - "12345:12345"
+      - "12347:12347"
+      - "12348:12348"
+      - "4317:4317"
+
+  init:
+    image: &tempoImage ${TEMPO_IMAGE:-docker.io/grafana/tempo:2.5.0}
+    user: root
+    entrypoint:
+      - "chown"
+      - "10001:10001"
+      - "/var/tempo"
+    volumes:
+      - ./tempo-data:/var/tempo
+
+  tempo:
+    image: *tempoImage
+    depends_on:
+      - init
+        # {
+        #  mimir: {
+        #   condition: service_healthy },
+        #  minio: {
+        #   condition: service_healthy
+        # },
+      #  init }
+    configs:
+      - source: tempo_config_file
+        target: /etc/tempo/config/config.yaml
+    # volumes:
+    #   - ./tempo/tempo.yaml:/etc/tempo/config.yaml
+    command:
+      - -config.file=/etc/tempo/config/config.yaml
+      - -target=all
+      - -config.expand-env=true
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent --head http://localhost:3200/ready || exit 1"]
+      interval: 30s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
+    ports:
+      - "3200:3200"
+      - "3205:3205"
+
+  loki:
+    image: ${LOKI_IMAGE:-docker.io/grafana/loki:3.0.0}
+    configs:
+      - source: loki_config_file
+        target: /etc/loki/config.yaml
+    volumes:
+      - ./loki:/etc/loki/config
+    command:
+      - -config.file=/etc/loki/config.yaml
+      - -target=all
+      - -config.expand-env=true
+    ports:
+      - "3100:3100"
+
+  mimir:
+    image: ${MIMIR_IMAGE:-docker.io/grafana/mimir:2.13.0}
+    configs:
+      - source: mimir_config_file
+        target: /etc/mimir/config.yaml
+    volumes:
+      - ../config/mimir/configs:/etc/mimir/configs
+    command:
+      - -config.file=/etc/mimir/config.yaml
+      - -target=all,alertmanager
+      - -config.expand-env=true
+      - -alertmanager.enable-api=true
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:9090/ready || exit 1" ]
+      # <<: "status-healthcheck"
+    ports:
+      - "9090:9090"
+      - "9095:9095"
+  #TODO: Set env
+  minio:
+    image: ${MINIO_IMAGE:-docker.io/minio/minio}
+    volumes:
+      - ././data/minio:/data
+    entrypoint:
+      - sh
+      - -euc
+      - |
+        mkdir -p /data/mimir-blocks /data/mimir-ruler /data/mimir-alertmanager && \
+        mkdir -p /data/loki-data /data/loki-ruler && \
+        mkdir -p /data/tempo-data && \
+        minio server /data
+    environment:
+      - MINIO_ROOT_USER=bucket
+      - MINIO_ROOT_PASSWORD=supersecret
+      - MINIO_PROMETHEUS_AUTH_TYPE=public
+      - MINIO_UPDATE=off
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
+      interval: 15s
+      timeout: 20s
+      retries: 5
+    ports:
+      - "9000:9000"
+
+  grafana:
+    configs:
+      - source: grafana_config_file
+        target: /etc/grafana/conf/custom.ini
+    image: ${GRAFANA_IMAGE:-docker.io/grafana/grafana:11.1.2}
+    volumes:
+      - ../config/grafana/configs/grafana.ini:/etc/grafana/grafana.ini
+      - ../config/grafana/configs/provisioning:/etc/grafana/provisioning
+      - ../config/grafana/configs/definitions:/var/lib/grafana/dashboards
+    environment:
+      - GF_FEATURE_TOGGLE_ENABLE=traceqlEditor tracesEmbeddedFlameGraph traceqlSearch correlations metricsSummary traceToMetrics  datatrails
+      - GF_INSTALL_PLUGINS=https://storage.googleapis.com/integration-artifacts/grafana-lokiexplore-app/grafana-lokiexplore-app-latest.zip;grafana-lokiexplore-app
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+
+    command:
+      - --config=/etc/grafana/grafana.ini
+    ports:
+      - "3000:3000"
+
+networks:
+  default:
+    driver: bridge
