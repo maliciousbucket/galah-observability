@@ -1,0 +1,25 @@
+declare "prometheus_collector" {
+	argument "listen_address" {
+		optional = true
+		default  = ""
+	}
+
+	argument "listen_port" {
+		optional = true
+		default  = 9009
+	}
+
+	argument "forward_to" {
+		optional = true
+		comment  = "Must be a list(MetricReceiver) where collected metrics are sent"
+	}
+
+	prometheus.receive_http "prometheus_collector" {
+		http {
+			listen_address = coalesce(argument.listen_address.value, "")
+			listen_port    = coalesce(argument.listen_port.value, 9009)
+		}
+
+		forward_to = argument.forward_to.value
+	}
+}

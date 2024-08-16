@@ -1,0 +1,90 @@
+declare "normalize_level" {
+	argument "forward_to" {
+		comment = "Must be a list(LogsReceiver) where collected logs should be forwarded to"
+	}
+
+	argument "transform" {
+		comment  = "The transformation to apply to the level can be 'ToLower' or 'ToUpper' (default: ToLower)"
+		optional = true
+		default  = "ToLower"
+	}
+
+	export "receiver" {
+		value = loki.process.level_normalize.receiver
+	}
+
+	loki.process "level_normalize" {
+		forward_to = argument.forward_to.value
+
+		//Normalise
+		// normalize debug level, handles TRC, TRAC, or TRACE
+		stage.replace {
+			source     = "level"
+			expression = "(?i)(trace?|trc)\\d*"
+			replace    = "trace"
+		}
+
+		// normalize debug level, handles DBG, DEBU, DEBUG, DEBUG1, DEBUG2, DEBUG3, DEBUG4, DEBUG5, etc.
+		stage.replace {
+			source     = "level"
+			expression = "(?i)(debug?|dbg)\\d*"
+			replace    = "debug"
+		}
+
+		// normalize info level handles INF, INFO, INFORMATION, or INFORMATIONAL
+		stage.replace {
+			source     = "level"
+			expression = "(?i)(info?(mation(al)?)?)"
+			replace    = "info"
+		}
+
+		// normalize the warning level handles WRN, WARN or WARNING
+		stage.replace {
+			source     = "level"
+			expression = "(?i)(wa?rn(ing)?)"
+			replace    = "warning"
+		}
+
+		// normalize the error level handles ERR or ERROR
+		stage.replace {
+			source     = "level"
+			expression = "(?i)(err(or)?)"
+			replace    = "error"
+		}
+
+		// normalize the fatal level handles FTL or FATAL
+		stage.replace {
+			source     = "level"
+			expression = "(?i)(fatal|ftl)"
+			replace    = "fatal"
+		}
+
+		// normalize the critical level handles CRIT or CRITICAL
+		stage.replace {
+			source     = "level"
+			expression = "(?i)(crit(ical)?)"
+			replace    = "critical"
+		}
+
+		// normalize the panic level handles PNC or PANIC
+		stage.replace {
+			source     = "level"
+			expression = "(?i)(panic|pnc)"
+			replace    = "critical"
+		}
+
+		// the level value could be anything fatal, notice, alert, emergency, there are no combinations / abbreviations to normalize for these
+		// but we can still convert to lower or upper case
+		stage.template {
+			source   = "level"
+			template = "{{ " + argument.transform.value + " .Value }}"
+		}
+
+		// set the extracted level to be a label
+		stage.labels {
+			values = {
+				level = "",
+			}
+		}
+	}
+}

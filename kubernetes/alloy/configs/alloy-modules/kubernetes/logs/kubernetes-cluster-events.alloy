@@ -1,0 +1,41 @@
+declare "kubernetes_cluster_events" {
+	argument "forward_to" {
+		comment = "Must be a list(LogsReceiver) where collected logs should be forwarded to"
+	}
+
+	argument "job_label" {
+		optional = true
+	}
+
+	argument "namespaces" {
+		comment  = "Namespaces to watch for Events in. Default: [] (all)"
+		optional = true
+	}
+
+	argument "cluster" {
+		comment  = "The cluster that the events are collected from"
+		optional = false
+	}
+
+	loki.source.kubernetes_events "cluster_events" {
+		namespaces = coalesce(argument.namespaces.value, [])
+		job_name   = coalesce(argument.job_label.value, "integrations/kubernetes/eventhandler")
+		log_format = "logfmt"
+		forward_to = [loki.process.logs_service.receiver]
+	}
+
+	loki.process "process_cluster_events" {
+		stage.static.labels {
+			values = {
+				cluster = argument.cluster.value,
+			}
+		}
+
+		stage.labels {
+			values = {
+				kubernetes_cluster_events = "job",
+			}
+		}
+		forward_to = argument.forward_to.value
+	}
+}

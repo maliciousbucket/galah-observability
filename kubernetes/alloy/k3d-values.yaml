@@ -1,0 +1,83 @@
+alloy:
+  resources:
+    limits:
+      cpu: 250m
+      memory: 1024Mi
+    requests:
+      cpu: 100m
+      memory: 512Mi
+  configMap:
+    create: false
+    name: alloy-config
+    key: config.alloy
+  clustering:
+    enabled: true
+  stabilityLevel: experimental
+  enableReporting: false
+  securityContext:
+    privileged: true
+  envFrom:
+  - secretRef:
+      name: alloy-env
+      optional: true
+#      TODO: secret generator from env file
+  extraPorts:
+  - name: "loki-api"
+    port: 8080
+    targetPort: 8080
+    protocol: "TCP"
+  - name: "prom-remote"
+    port: 8081
+    targetPort: 8081
+    protocol: "TCP"
+  - name: "grpc-otlp"
+    port: 4317
+    targetPort: 4317
+    protocol: "TCP"
+  - name: "http-otlp"
+    port: 4318
+    targetPort: 4318
+    protocol: "TCP"
+  - name: "jaeger-grpc"
+    port: 14250
+    targetPort: 14250
+    protocol: "TCP"
+  - name: "jaeger-http"
+    port: 14268
+    targetPort: 14268
+    protocol: "TCP"
+  - name: "jaeger-binary"
+    port: 6832
+    targetPort: 6832
+    protocol: "UDP"
+  - name: "jaeger-compact"
+    port: 6831
+    targetPort: 6831
+    protocol: "UDP"
+  - name: "zipkin"
+    port: 9411
+    targetPort: 9411
+    protocol: "TCP"
+
+
+  - name
+#  env
+#ports
+#mounts
+
+controller:
+  type: statefulset
+  replicas: 1
+  podAnnotations:
+    logs.grafana.com/scrape: "true"
+#  volumes
+
+
+ingress:
+  enabled: true
+  faroPort: 12345
+  hosts:
+    - alloy.localhost
+
+serviceMonitor:
+  enabled: true

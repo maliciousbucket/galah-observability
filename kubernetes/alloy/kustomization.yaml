@@ -1,0 +1,18 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: galah-monitoring
+helmCharts:
+  - name: alloy
+    repo: https://grafana.github.io/helm-charts
+    version: 0.6.0
+    releaseName: alloy
+    namespace: galah-monitoring
+    includeCRDs: false
+    valuesFile: k3d-values.yaml
+
+
+configMapGenerator:
+  - name: alloy-config
+    namespace: galah-monitoring
+    files:
+      - configs/config.alloy

@@ -1,0 +1,19 @@
+declare "zipkin_collector" {
+	argument "forward_to" {
+		optional = true
+		comment  = "Must be a list(otelcol.Consumer) where collected traces are sent"
+	}
+
+	argument "endpoint" {
+		optional = true
+		default  = "0.0.0.0:9411"
+	}
+
+	otelcol.receiver.zipkin "zipkin" {
+		endpoint = coalesce(argument.endpoint.value, "0.0.0.0:9411")
+
+		output {
+			traces = argument.forward_to.value
+		}
+	}
+}
