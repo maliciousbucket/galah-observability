@@ -9,6 +9,7 @@ metadata:
     prometheus.io/scrape: "true"
   namespace: galah-tracing
 spec:
+  replicas: 1
   selector:
     matchLabels:
       app.kubernetes.io/name: tempo
@@ -36,10 +37,14 @@ spec:
             containerPort: 3205
           - name: opencensus
             containerPort: 55678
+          readinessProbe:
+            httpGet:
+              port: http-metrics
+              path: /ready
           resources:
             requests:
               cpu: 50m
-              memory: "512mi"
+              memory: "512Mi"
             limits:
               cpu: 100m
               memory: "1Gi"
@@ -64,8 +69,12 @@ spec:
           emptyDir:
             sizeLimit: "10Gi"
         - configMap:
+#            items:
+#              - key: config.yaml
+#
+#                path: config.yaml
             name: tempo
-          name: tempo-config
+          name: "config"
 
 
 

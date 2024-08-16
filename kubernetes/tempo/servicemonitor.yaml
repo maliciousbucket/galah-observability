@@ -13,8 +13,8 @@ spec:
       replacement: galah-tracing/tempo
       sourceLabels:
       - job
-    targetLabel: job
-  scheme: http
+      targetLabel: job
+    scheme: http
   namespaceSelector:
     matchNames:
     - galah-tracing
