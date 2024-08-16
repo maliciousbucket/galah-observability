@@ -8,6 +8,7 @@ BIN_DIR=../bin
 
 KUSTOMIZE="$BIN_DIR/kustomize"
 K3D="$BIN_DIR/k3d"
+
 source "$CURR_DIR/util/common.sh"
 
 section "Checking Tools"

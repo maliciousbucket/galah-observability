@@ -90,5 +90,9 @@ proceed_or_not() {
 # highlight the next step
 step() { log "Step: ${BLU}$1${END}"; }
 
+warn() { log "Warning: ${YEL}$1${END}"; }
+
+success() { log "Success: ${CYA}$1${END}"; }
+
 # output a "log" line with bold leading >>>
 log() { >&2 printf "${BLOCK}#${END} $1\n"; }
