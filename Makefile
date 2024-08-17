@@ -59,6 +59,12 @@ clean:
 
 .PHONY: manifests
 manifests:
+manifests: $(KUSTOMIZE) manifests-monitoring manifests-crds
+
+#manifests-monitoring:
+manifests-monitoring: $(KUSTOMIZE) manifests-grafana manifests-mimir manifests-loki manifests-tempo manifests-gateway
+
+manifests-crds: $(KUSTOMIZE) manifests-cert-manager manifests-prom-operator manifests-kube-state-metrics
 
 manifests-grafana: $(KUSTOMIZE)
 	$(KUSTOMIZE) build --enable-helm kubernetes/grafana > kubernetes/grafana/manifests/config.yaml
@@ -72,14 +78,18 @@ manifests-loki: $(KUSTOMIZE)
 manifests-tempo: $(KUSTOMIZE)
 	$(KUSTOMIZE) build --enable-helm kubernetes/tempo > kubernetes/tempo/manifests/config.yaml
 
-manifests-alloy:
+manifests-alloy: $(KUSTOMIZE)
 	$(KUSTOMIZE) build --enable-helm kubernetes/alloy > kubernetes/alloy/manifests/config.yaml
 
-manifests-gateway:
-	$(KUSTOMIZE) build --enable-helm kubernetes/gateway > kubernetes/gateway/mainfests/config.yaml
+manifests-gateway: $(KUSTOMIZE)
+	$(KUSTOMIZE) build --enable-helm kubernetes/gateway > kubernetes/gateway/manifests/config.yaml
+
+manifests-minio: $(KUSTOMIZE)
+	$(KUSTOMIZE) build --enable-helm kubernetes/minio-tenant > kubernetes/minio-tenant/manifests/config.yaml
+	$(KUSTOMIZE) build --enable-helm kubernetes/minio-operator > kubernetes/minio-operator/manifests/config.yaml
 
 manifests-prom-operator: $(KUSTOMIZE)
-	$(KUSTOMIZE) build --enable-helm kubernetes/prom-operator-crds > kubernetes/prom-operator-crs/manifests/config.yaml
+	$(KUSTOMIZE) build --enable-helm kubernetes/prom-operator-crds > kubernetes/prom-operator-crds/manifests/config.yaml
 
 manifests-cert-manager: $(KUSTOMIZE)
 	$(KUSTOMIZE) build --enable-helm kubernetes/cert-manager > kubernetes/cert-manager/manifests/config.yaml
@@ -92,6 +102,20 @@ manifests-kube-state-metrics: $(KUSTOMIZE)
 deploy-gateway:
 	@kubectl apply -f kubernetes/gateway/manifests/config.yaml
 	@kubectl rollout status -n gateway deployment/nginx --watch --timeout=300s
+
+.PHONY: deploy-minio
+deploy-minio:
+	@kubectl apply -f kubernetes/minio-operator/manifests/config.yaml
+	@kubectl rollout status -n minio-store deployment/minio-operator --watch --timeout=300s
+	@kubectl apply -f kubernetes/minio-tenant/manifests/config.yaml
+	@kubectl rollout status -n minio-store statefulset/galah-pool-15gb --watch --timeout=300s || true
+
+.PHONY: deploy-grafana
+deploy-grafana:
+	@kubectl apply -f kubernetes/grafana/manifests/config.yaml
+	@kubectl rollout status -n galah-monitoring deployment/grafana --watch --timeout=300s
+delete-grafana:
+	@kubectl delete --ignore-not-found -f kubernetes/grafana/manifests/config.yaml
 
 .PHONY: deploy-tempo
 deploy-tempo:

@@ -1,0 +1,15 @@
+operator:
+  env:
+    - name: OPERATOR_STS_ENABLED
+      value: "on"
+    - name: OPERATOR_STS_AUTO_TLS_ENABLED
+      value: "off"
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 10m
+      memory: 64Mi
+      ephemeral-storage: 128Mi
+    limits:
+      cpu: 900m
+      memory: 1Gi
