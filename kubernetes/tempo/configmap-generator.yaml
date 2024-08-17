@@ -5,6 +5,6 @@ metadata:
   namespace: galah-tracing
 behaviour: replace
 files:
-  - config.yaml=configs/tempo.yaml
+  - configs/tempo.yaml
 options:
   disableNameSuffixHash: true

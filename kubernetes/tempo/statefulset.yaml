@@ -27,7 +27,7 @@ spec:
           image: docker.io/grafana/tempo:2.5.0
           imagePullPolicy: IfNotPresent
           args:
-            - -config.file=/conf/tempo.yaml
+            - -config.file=/etc/tempo/tempo.yaml
             - -config.expand-env=true
             - -target=all
           ports:
@@ -49,7 +49,7 @@ spec:
               cpu: 100m
               memory: "1Gi"
           volumeMounts:
-          - mountPath: /etc/tempo/config
+          - mountPath: /etc/tempo/
             name: config
           - mountPath: /var/tempo/wal
             subPath: wal

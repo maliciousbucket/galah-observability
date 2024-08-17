@@ -42,7 +42,7 @@ subjects:
 ---
 apiVersion: v1
 data:
-  config.yaml: "stream_over_http_enabled: true\nserver:\n  http_listen_port: 3200\n#
+  tempo.yaml: "stream_over_http_enabled: true\nserver:\n  http_listen_port: 3200\n#
     \ grpc_listen_port: 3205\n\n  log_level: info\n\n\ndistributor:\n  receivers:\n
     \   otlp:\n      protocols:\n        http:\n        grpc:\n          endpoint:
     0.0.0.0:3205\n    jaeger:\n      protocols:\n        thrift_http:\n        grpc:\n
@@ -69,11 +69,14 @@ metadata:
 apiVersion: v1
 kind: Service
 metadata:
-  name: tempo-headless
+  labels:
+    app.kubernetes.io/name: tempo
+  name: tempo
 spec:
   ports:
   - name: http-metrics
     port: 3200
+    targetPort: 3200
   - appProtocol: grpc
     name: grpc
     port: 3205
@@ -106,7 +109,7 @@ spec:
       automountServiceAccountToken: false
       containers:
       - args:
-        - -config.file=/conf/tempo.yaml
+        - -config.file=/etc/tempo/tempo.yaml
         - -config.expand-env=true
         - -target=all
         image: docker.io/grafana/tempo:2.5.0
@@ -138,7 +141,7 @@ spec:
           privileged: false
           readOnlyRootFilesystem: true
         volumeMounts:
-        - mountPath: /etc/tempo/config
+        - mountPath: /etc/tempo/
           name: config
         - mountPath: /var/tempo/wal
           name: storage

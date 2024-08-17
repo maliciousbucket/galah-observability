@@ -1,7 +1,7 @@
 stream_over_http_enabled: true
 server:
   http_listen_port: 3200
-#  grpc_listen_port: 3205
+  grpc_listen_port: 3205
 
   log_level: info
 
@@ -11,8 +11,9 @@ distributor:
     otlp:
       protocols:
         http:
+          //TODO: Expose ports
         grpc:
-          endpoint: 0.0.0.0:3205
+          endpoint: 0.0.0.0:3208
     jaeger:
       protocols:
         thrift_http:
@@ -30,6 +31,10 @@ query_frontend:
   trace_by_id:
     duration_slo: 5s
 
+querier:
+  frontend_worker:
+    frontend_address: tempo:3205
+
 
 metrics_generator:
   registry:
@@ -40,10 +45,9 @@ metrics_generator:
     path: /var/tempo/wal
     remote_write:
 #      TODO: Change to alloy remote write
-      - url: http://mimir:9090/api/v1/push
+      - url: ${ALLOY_PROM_REMOTE:-httpL//nginx-gateway.svc.cluster.local:9090/api/v1/push}
         send_exemplars: true
-  traces_storage:
-    path: /var/tempo/traces
+        send_native_histograms: true
   processor:
     service_graphs:
       dimensions:
@@ -71,14 +75,23 @@ compactor:
 
 storage:
   trace:
-    backend: local
+    backend: s3
     wal:
       path: /var/tempo/wal
-    local:
-      path: /var/tempo/blocks
+#    Yep, not insecure at all
+    s3:
+      bucket: tempo-data
+      endpoint: ${TEMPO_S3_ENDPOINT:-}
+      access_key: ${TEMPO_S3_ACCESS_KEY:-bucket}
+      secret_key: ${TEMPO_S3_SECRET_KEY:-supersecret}
+      insecure: ${TEMPO_S3_INSECURE:-true}
+      tls_insecure_skip_verify: true
 
 overrides:
   defaults:
     metrics_generator:
-      processors: ['local-blocks', 'span-metrics', 'service-graphs']
+      processors: [ 'span-metrics', 'service-graphs']
+
+usage_report:
+  reporting_enabled: false
 
