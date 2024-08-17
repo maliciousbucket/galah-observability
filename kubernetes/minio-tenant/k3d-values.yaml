@@ -1,0 +1,39 @@
+secrets:
+  existingSecret:
+    name: minio-env
+
+tenant:
+  name: galah
+  configuration:
+    name: minio-env
+  certificate:
+    requestAutoCert: false
+    externalCertSecret:
+      - name: galah-tls
+        type: cert-manager.io/v1
+  pools:
+  - name: pool-15gb
+    reclaimStorage: true
+    servers: 1
+    volumesPerServer: 1
+    size: 10Gi
+
+  features:
+    bucketDNS: false
+    domains: {}
+    enableSFTP: false
+
+  exposeServices:
+    minio: false
+    console: false
+
+  buckets:
+    - name: mimir-blocks
+    - name: mimir-ruler
+    - name: mimir-alertmanager
+    - name: loki-data
+    - name: loki-ruler
+    - name: tempo-data
+
+  users:
+    - name: minio-user

@@ -1,0 +1,60 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: minio
+  namespace: minio-store
+spec:
+  endpoints:
+    - port: https-minio
+      path: /minio/v2/metrics/cluster
+      relabelings:
+      - replacement: minio-job
+        sourceLabels:
+        - job
+        targetLabels: job
+      - sourceLabels:
+          - pod
+        regex: ".*-0$"
+        action: keep
+      scheme: https
+      tlsConfig:
+        insecureSkipVerify: true
+    - port: https-minio
+      path: /minio/v2/metrics/bucket
+      relabelings:
+        - replacement: minio-job-bucket
+          sourceLabels:
+            - job
+          targetLabels: job
+        - sourceLabels:
+            - service
+          regex: "minio"
+          action: keep
+      scheme: https
+      tlsConfig:
+        insecureSkipVerify: true
+    - port: https-minio
+      path: /minio/v2/metrics/resource
+      relabelings:
+        - replacement: minio-job-resource
+          sourceLabels:
+            - job
+          targetLabels: job
+        - sourceLabels:
+            - service
+          regex: "minio"
+          action: keep
+      scheme: https
+      tlsConfig:
+        insecureSkipVerify: true
+  namespaceSelector:
+    - minio-store
+  selector:
+    matchExpression:
+    - key: prometheus.io/service-monitor
+      operator: NotIn
+      values:
+      - "false"
+    - key: v1.min.io/tenant
+      operator: Exists

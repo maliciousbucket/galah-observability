@@ -1,0 +1,18 @@
+# cert.yaml
+# https://github.com/minio/operator/blob/master/docs/cert-manager.md#deploy-the-tenant
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: minio-store-cert
+  namespace: minio-store
+spec:
+  dnsNames:
+    - minio
+    - minio.minio-store
+    - minio.minio-store.svc.cluster.local
+    - '*.minio-store.svc.cluster.local'
+    - '*.galah.minio-store.svc.cluster.local'
+  secretName: galah-tls
+  issuerRef:
+    name: minio-store-issuer
+
