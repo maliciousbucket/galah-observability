@@ -1,0 +1,20 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+  namespace: gateway
+  labels:
+    app: nginx
+spec:
+  ports:
+    - port: 9090
+      name: http-mimir
+    - port: 3100
+      name: http-loki
+    - port: 3200
+      name: http-tempo
+    - port: 3205
+      name: grpc-tempo
+  selector:
+    app: nginx

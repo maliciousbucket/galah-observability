@@ -51,8 +51,62 @@ fmt:
 cluster:
 	@echo "Using K3D: $(K3D)"
 	$(K3D) cluster create galah-monitoring --config kubernetes/k3d-config.yaml
+
 clean:
 	$(K3D) cluster delete galah-monitoring
+	@rm -rf kubernetes/*/charts/
+	@rm -rf config/*/charts/
+
+.PHONY: manifests
+manifests:
+
+manifests-grafana: $(KUSTOMIZE)
+	$(KUSTOMIZE) build --enable-helm kubernetes/grafana > kubernetes/grafana/manifests/config.yaml
+
+manifests-mimir: $(KUSTOMIZE)
+	$(KUSTOMIZE) build --enable-helm kubernetes/mimir > kubernetes/mimir/manifests/config.yaml
+
+manifests-loki: $(KUSTOMIZE)
+	$(KUSTOMIZE) build --enable-helm kubernetes/loki > kubernetes/loki/manifests/config.yaml
+
+manifests-tempo: $(KUSTOMIZE)
+	$(KUSTOMIZE) build --enable-helm kubernetes/tempo > kubernetes/tempo/manifests/config.yaml
+
+manifests-alloy:
+	$(KUSTOMIZE) build --enable-helm kubernetes/alloy > kubernetes/alloy/manifests/config.yaml
+
+manifests-gateway:
+	$(KUSTOMIZE) build --enable-helm kubernetes/gateway > kubernetes/gateway/mainfests/config.yaml
+
+manifests-prom-operator: $(KUSTOMIZE)
+	$(KUSTOMIZE) build --enable-helm kubernetes/prom-operator-crds > kubernetes/prom-operator-crs/manifests/config.yaml
+
+manifests-cert-manager: $(KUSTOMIZE)
+	$(KUSTOMIZE) build --enable-helm kubernetes/cert-manager > kubernetes/cert-manager/manifests/config.yaml
+
+manifests-kube-state-metrics: $(KUSTOMIZE)
+	$(KUSTOMIZE) build --enable-helm kubernetes/kube-state-metrics > kubernetes/kube-state-metrics/manifests/config.yaml
+
+
+.PHONY: deploy-gateway
+deploy-gateway:
+	@kubectl apply -f kubernetes/gateway/manifests/config.yaml
+	@kubectl rollout status -n gateway deployment/nginx --watch --timeout=300s
+
+.PHONY: deploy-tempo
+deploy-tempo:
+	@kubectl apply -f kubernetes/tempo/manifests/config.yaml
+	@kubectl rollout status -n galah-tracing statefulset/tempo --watch --timeout=300s
+
+.PHONY: deploy-mimir
+deploy-mimir:
+	@kubectl apply -f kubernetes/mimir/manifests/config.yaml
+	@kubectl rollout status -n galah-monitoring deployment/mimir --watch --timeout=300s
+
+.PHONY: deploy-loki
+deploy-loki:
+	@kubectl apply -f kubernetes/loki/manifests/config.yaml
+	@kubectl rollout status -n galah-logging statefulset/loki --watch --timeout=300s
 
 
 define go-install-tool
