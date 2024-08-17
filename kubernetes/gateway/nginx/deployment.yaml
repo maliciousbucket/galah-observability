@@ -1,0 +1,73 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  namespace: gateway
+  labels:
+    app: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+        - name: nginx
+          image: nginx
+          imagePullPolicy: IfNotPresent
+          #TODO Secret Generator from env
+          envFrom:
+            - configMapRef:
+                name: nginx-env
+                optional: true
+          ports:
+            - containerPort: 9090
+              name: http-mimir
+            - containerPort: 3100
+              name: http-loki
+            - containerPort: 3200
+              name: http-tempo
+            - containerPort: 3205
+              name: grpc-tempo
+          volumeMounts:
+            - mountPath: /etc/nginx/templates
+              name: templates
+            - mountPath: /docker-entrypoint.d
+              name: entry-scripts
+          resources:
+            requests:
+              cpu: 10m
+              memory: 10Mi
+            limits:
+              cpu: 250m
+              memory: 128Mi
+      initContainers:
+        - name: perms
+          image: registry.k8s.io/busybox
+          command: ['sh', '-c', "cp /configmap/* /docker-entrypoint.d/"]
+          volumeMounts:
+            - mountPath: /configmap
+              name: configmap-scripts
+            - mountPath: /docker-entrypoint.d
+              name: entry-scripts
+      terminationGracePeriodSeconds: 60
+      volumes:
+        - name: templates
+          projected:
+            sources:
+              - configMap:
+                  name: nginx-conf
+              - configMap:
+                  name: nginx-templates
+        - name: entry-scripts
+          emptyDir:
+            {}
+        - name: configmap-scripts
+          configMap:
+            name: nginx-entry-scripts
+            defaultMode: 0777

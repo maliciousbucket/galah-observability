@@ -1,0 +1,36 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+replicas:
+  - name: nginx
+    count: 2
+
+resources:
+  - namespace.yaml
+  - nginx/deployment.yaml
+  - nginx/service.yaml
+
+images:
+  - name: nginx
+    newName: nginxinc/nginx-unprivileged
+    newTag: 1.27-alpine
+
+
+configMapGenerator:
+- name: nginx-conf
+  namespace: gateway
+  files:
+    - nginx.conf.template=nginx/nginx.conf
+- name: nginx-entry-scripts
+  namespace: gateway
+  files:
+    - nginx/entrypoint.d/default-env.envsh
+    - nginx/entrypoint.d/local-resolvers.sh
+- name: nginx-templates
+  namespace: gateway
+  options:
+    disableNameSuffixHash: true
+  files:
+    - gateway_mimir.conf.template=nginx/gateway_mimir.conf
+    - gateway_loki.conf.template=nginx/gateway_loki.conf
+    - gateway_tempo.conf.template=nginx/gateway_tempo.conf
