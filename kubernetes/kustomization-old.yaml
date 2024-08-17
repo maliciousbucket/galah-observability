@@ -1,0 +1,50 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: galah-monitoring
+helmCharts:
+  - name: grafana
+    repo: https://grafana.github.io/helm-charts
+    version: 8.4.4
+    releaseName: grafana
+    namespace: galah-monitoring
+    includeCRDs: false
+    valuesFile: k3d-values.yaml
+images:
+  - name: docker.io/grafana/grafana
+    newTag: 11.1.3
+  - name: quay.io/kiwigrid/k8s-sidecar
+    newTag: 1.26.1
+resources:
+  - namespace.yaml
+configMapGenerator:
+  - name: grafana-config
+    files:
+      - configs/grafana.ini
+  - name: grafana-datasources
+    options:
+      labels:
+        grafana_datasource: "1"
+    files:
+        - configs/provisioning/datasources/datasources.yaml
+  - name: k6-prometheus.json
+    options:
+      labels:
+        grafana_dashboard: "1"
+      annotations:
+        grafana_dashboard_folder: "/dashboards"
+    files:
+      - configs/definitions/k6-prometheus.json
+secretGenerator:
+  - name: grafana-secret
+    literals:
+      - admin-user=admin
+      - admin-password=admin
+  - name: grafana-env
+    options:
+      disableNameSuffixHash: true
+    literals:
+      - GF_FEATURE_TOGGLE_ENABLE=traceqlEditor tracesEmbeddedFlameGraph traceqlSearch correlations metricsSummary traceToMetrics  datatrails
+      - GF_INSTALL_PLUGINS=https://storage.googleapis.com/integration-artifacts/grafana-lokiexplore-app/grafana-lokiexplore-app-latest.zip;grafana-lokiexplore-app
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
