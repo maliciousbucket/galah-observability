@@ -4,8 +4,11 @@ kind: Service
 metadata:
   name: mimir
 spec:
+  type: ClusterIP
   ports:
     - port: 9090
       name: http-metrics
+      targetPort: 9090
     - port: 9095
       name: grpc-dist
+      targetPort: 9095

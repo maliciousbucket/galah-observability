@@ -39,7 +39,7 @@ configMapGenerator:
     files:
       - configs/mimir.yaml
       - configs/runtime.yaml
-      - alert_manager_fallback_config=configs/alertmanager-fallback-config.yaml
+      - configs/alertmanager-fallback-config.yaml
     namespace: galah-monitoring
 #    envs:
 #      - .env

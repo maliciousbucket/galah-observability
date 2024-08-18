@@ -20,9 +20,11 @@ spec:
       containers:
         - args:
             - -target=all,alertmanager
-            - -config.file=/etc/mimir/config.yaml
+            - -config.file=/etc/mimir/configs/mimir.yaml
             - -config.expand-env=true
             - -alertmanager.enable-api=true
+            - -memberlist.bind-addr=$(POD_IP)
+
           env:
             - name: POD_IP
               valueFrom:
@@ -50,7 +52,7 @@ spec:
               port: http-metrics
               path: /ready
           volumeMounts:
-            - mountPath: /etc/mimir
+            - mountPath: /etc/mimir/configs
               name: config
             - mountPath: /data
               name: storage
