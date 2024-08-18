@@ -8,7 +8,7 @@ helmCharts:
     releaseName: alloy
     namespace: galah-monitoring
     includeCRDs: false
-    valuesFile: k3d-values.yaml
+    valuesFile: values.yaml
 
 
 configMapGenerator:
@@ -16,3 +16,63 @@ configMapGenerator:
     namespace: galah-monitoring
     files:
       - configs/config.alloy
+
+  - name: alloy-modules-kubernetes-metrics
+    namespace: galah-monitoring
+    files:
+    - configs/alloy-modules/kubernetes/metrics/annotations.alloy
+    - configs/alloy-modules/kubernetes/metrics/podmonitors.alloy
+    - configs/alloy-modules/kubernetes/metrics/servicemonitors.alloy
+
+
+  - name: alloy-modules-kubernetes-logs
+    namespace: galah-monitoring
+    files:
+    - configs/alloy-modules/kubernetes/logs/json-remove-nulls.alloy
+    - configs/alloy-modules/kubernetes/logs/keep-labels.alloy
+    - configs/alloy-modules/kubernetes/logs/kubernetes-cluster-events.alloy
+    - configs/alloy-modules/kubernetes/logs/kubernetes-default-level.alloy
+    - configs/alloy-modules/kubernetes/logs/log-levels.alloy
+    - configs/alloy-modules/kubernetes/logs/log-sampling.alloy
+    - configs/alloy-modules/kubernetes/logs/pods.alloy
+    - configs/alloy-modules/kubernetes/logs/relabel-with-level.alloy
+    - configs/alloy-modules/kubernetes/logs/structured-metadata.alloy
+
+  - name: alloy-modules-kubernetes-traces
+    namespace: galah-monitoring
+
+  - name: alloy-modules-kubernetes-jobs
+    namespace: galah-monitoring
+
+  - name: alloy-modules-integrations
+    namespace: galah-monitoring
+    files:
+    - configs/alloy-modules/kubernetes/integrations/alloy.alloy
+    - configs/alloy-modules/kubernetes/integrations/discovery.alloy
+    - configs/alloy-modules/kubernetes/integrations/loki.alloy
+    - configs/alloy-modules/kubernetes/integrations/mimir.alloy
+    - configs/alloy-modules/kubernetes/integrations/scrape.alloy
+    - configs/alloy-modules/kubernetes/integrations/tempo.alloy
+
+  - name: alloy-modules-integrations-kubernetes
+    namespace: galah-monitoring
+    files:
+    - configs/alloy-modules/kubernetes/integrations/kubernetes/api-server.alloy
+    - configs/alloy-modules/kubernetes/integrations/kubernetes/kube-resources.alloy
+    - configs/alloy-modules/kubernetes/integrations/kubernetes/kube-state-metrics.alloy
+    - configs/alloy-modules/kubernetes/integrations/kubernetes/kubelet.alloy
+
+  - name: alloy-modules-kubernetes-collectors
+    namespace: galah-monitoring
+    files:
+    - configs/alloy-modules/kubernetes/collectors/jaeger/jaeger-collector.alloy
+    - configs/alloy-modules/kubernetes/collectors/loki/loki-collector.alloy
+    - configs/alloy-modules/kubernetes/collectors/otlp/otlp-collector.alloy
+    - configs/alloy-modules/kubernetes/collectors/prometheus/prometheus-collector.alloy
+    - configs/alloy-modules/kubernetes/collectors/zipkin/zipkin-collector.alloy
+
+
+  - name: alloy-modules-kubernetes-provider
+    namespace: galah-monitoring
+    files:
+      - configs/alloy-modules/provider/self_hosted.alloy
