@@ -2,9 +2,9 @@ apiVersion: v1
 data:
   config.env: |
     ZXhwb3J0IE1JTklPX0JST1dTRVI9Im9uIgpleHBvcnQgTUlOSU9fUk9PVF9QQVNTV09SRD
-    0iYWJjMTIzIgpleHBvcnQgTUlOSU9fUk9PVF9VU0VSPSJhZG1pbiIKZXhwb3J0IE1JTklP
-    X1BST01FVEhFVVNfQVVUSF9UWVBFPSJwdWJsaWMiCmV4cG9ydCBNSU5JT19QUk9NRVRIRV
-    VTX0pPQl9JRD0ibWluaW8tam9iIgo=
+    0iYnVja2V0MTIzYWJjIgpleHBvcnQgTUlOSU9fUk9PVF9VU0VSPSJhZG1pbiIKZXhwb3J0
+    IE1JTklPX1BST01FVEhFVVNfQVVUSF9UWVBFPSJwdWJsaWMiCmV4cG9ydCBNSU5JT19QUk
+    9NRVRIRVVTX0pPQl9JRD0ibWluaW8tam9iIgo=
 kind: Secret
 metadata:
   labels:
@@ -21,7 +21,7 @@ kind: Secret
 metadata:
   labels:
     v1.min.io/tenant: galah
-  name: user
+  name: minio-user
   namespace: minio-store
 type: Opaque
 ---
@@ -72,7 +72,7 @@ spec:
   mountPath: /export
   podManagementPolicy: Parallel
   pools:
-  - name: galah-pool-15gb
+  - name: pool-15gb
     servers: 1
     volumeClaimTemplate:
       metadata:
@@ -103,7 +103,7 @@ spec:
     - replacement: minio-job
       sourceLabels:
       - job
-      targetLabels: job
+      targetLabel: job
     - action: keep
       regex: .*-0$
       sourceLabels:
@@ -117,7 +117,7 @@ spec:
     - replacement: minio-job-bucket
       sourceLabels:
       - job
-      targetLabels: job
+      targetLabel: job
     - action: keep
       regex: minio
       sourceLabels:
@@ -131,7 +131,7 @@ spec:
     - replacement: minio-job-resource
       sourceLabels:
       - job
-      targetLabels: job
+      targetLabel: job
     - action: keep
       regex: minio
       sourceLabels:
@@ -140,9 +140,10 @@ spec:
     tlsConfig:
       insecureSkipVerify: true
   namespaceSelector:
-  - minio-store
+    matchNames:
+    - minio-store
   selector:
-    matchExpression:
+    matchExpressions:
     - key: prometheus.io/service-monitor
       operator: NotIn
       values:

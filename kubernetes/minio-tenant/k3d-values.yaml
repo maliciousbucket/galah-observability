@@ -12,7 +12,7 @@ tenant:
       - name: galah-tls
         type: cert-manager.io/v1
   pools:
-  - name: galah-pool-15gb
+  - name: pool-15gb
     reclaimStorage: true
     servers: 1
     volumesPerServer: 1

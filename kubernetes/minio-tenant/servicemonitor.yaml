@@ -12,7 +12,7 @@ spec:
       - replacement: minio-job
         sourceLabels:
         - job
-        targetLabels: job
+        targetLabel: job
       - sourceLabels:
           - pod
         regex: ".*-0$"
@@ -26,7 +26,7 @@ spec:
         - replacement: minio-job-bucket
           sourceLabels:
             - job
-          targetLabels: job
+          targetLabel: job
         - sourceLabels:
             - service
           regex: "minio"
@@ -40,7 +40,7 @@ spec:
         - replacement: minio-job-resource
           sourceLabels:
             - job
-          targetLabels: job
+          targetLabel: job
         - sourceLabels:
             - service
           regex: "minio"
@@ -49,9 +49,10 @@ spec:
       tlsConfig:
         insecureSkipVerify: true
   namespaceSelector:
+    matchNames:
     - minio-store
   selector:
-    matchExpression:
+    matchExpressions:
     - key: prometheus.io/service-monitor
       operator: NotIn
       values:

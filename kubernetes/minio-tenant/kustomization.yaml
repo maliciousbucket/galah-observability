@@ -23,6 +23,6 @@ secretGenerator:
   - name: minio-env
     files:
       - configs/config.env
-  - name: user
+  - name: minio-user
     envs:
         - configs/.env.minio-user
