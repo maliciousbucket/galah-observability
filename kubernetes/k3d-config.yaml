@@ -1,3 +1,4 @@
+# nonk8s
 apiVersion: k3d.io/v1alpha5
 kind: Simple
 metadata:
@@ -5,36 +6,45 @@ metadata:
 servers: 1
 agents: 2
 kubeAPI:
-#  host: localhost
   hostIP: "127.0.0.1"
   hostPort: "6445"
 image: rancher/k3s:v1.30.3-k3s1
 ports:
   - port: 8080:80
     nodeFilters:
-    - loadbalancer
-#  - port: 80:8080
-#    nodeFilters:
-#      - loadbalancer
-#  - port: 8081:80 # same as `--port '8080:81@loadbalancer'`
-#    nodeFilters:
-#      - loadbalancer
+      - loadbalancer
+  - port: 8081:80 # same as `--port '8080:81@loadbalancer'`
+    nodeFilters:
+      - loadbalancer
   - port: 8443:443
     nodeFilters:
-     - loadbalancer
+      - loadbalancer
+  - port: 8082:80
+    nodeFilters:
+      - loadbalancer
+  - port: 3000:80
+    nodeFilters:
+      - loadbalancer
+  - port: 12345:12345
+    nodeFilters:
+      - loadbalancer
 
 
 
-#env:
-#  - envVar: NO_PROXY=localhost,127.0.0.1
-#    nodeFilters:
-#      - server:0
-#      - agent:*
+
+env:
+  - envVar: NO_PROXY=localhost,127.0.0.1
+    nodeFilters:
+      - server:0
+      - agent:*
 
 files:
 - description: "Pre-installed Prometheus Operator CRDs"
   source: prom-operator-crds/manifests/config.yaml
   destination: k3s-manifests-custom/prometheus-operator-crds-config.yaml
+- description: "Pre-installed Cert-Manager CRDs"
+  source: cert-manager/manifests/config.yaml
+  destination: k3s-manifests-custom/cert-manager-config.yaml
 
 registries:
   create:
@@ -46,7 +56,7 @@ registries:
       username: ""
       password: ""
     volumes:
-      - /tmp/reg-docker-io:/var/lib/registry # persist data locally in /tmp/reg-docker-io
+      - /tmp/reg-docker-io:/var/lib/registry
   config: |
     mirrors:
       "docker.io":
