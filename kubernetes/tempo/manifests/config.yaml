@@ -42,25 +42,30 @@ subjects:
 ---
 apiVersion: v1
 data:
-  tempo.yaml: "stream_over_http_enabled: true\nserver:\n  http_listen_port: 3200\n#
+  tempo.yaml: "stream_over_http_enabled: true\nserver:\n  http_listen_port: 3200\n
     \ grpc_listen_port: 3205\n\n  log_level: info\n\n\ndistributor:\n  receivers:\n
-    \   otlp:\n      protocols:\n        http:\n        grpc:\n          endpoint:
-    0.0.0.0:3205\n    jaeger:\n      protocols:\n        thrift_http:\n        grpc:\n
-    \       thrift_binary:\n        thrift_compact:\n    zipkin:\n    \n\n# From example,
-    will need adjusting.\nquery_frontend:\n  search:\n    duration_slo: 5s\n    throughput_bytes_slo:
-    1.073741824e+09\n  trace_by_id:\n    duration_slo: 5s\n\n\nmetrics_generator:\n
+    \   otlp:\n      protocols:\n        http:\n          #TODO: Expose ports\n        grpc:\n
+    \         endpoint: 0.0.0.0:3208\n    jaeger:\n      protocols:\n        thrift_http:\n
+    \       grpc:\n        thrift_binary:\n        thrift_compact:\n    zipkin:\n
+    \   \n\n# From example, will need adjusting.\nquery_frontend:\n  search:\n    duration_slo:
+    5s\n    throughput_bytes_slo: 1.073741824e+09\n  trace_by_id:\n    duration_slo:
+    5s\n\n#querier:\n#  frontend_worker:\n#    frontend_address: tempo:3205\n\n\nmetrics_generator:\n
     \ registry:\n    external_labels:\n      source: tempo\n      collection_interval:
     5s\n  storage:\n    path: /var/tempo/wal\n    remote_write:\n#      TODO: Change
-    to alloy remote write\n      - url: http://mimir:9090/api/v1/push\n        send_exemplars:
-    true\n  traces_storage:\n    path: /var/tempo/traces\n  processor:\n    service_graphs:\n
-    \     dimensions:\n        - http.method\n        - http.target\n        - http.status_code\n
-    \   span_metrics:\n      dimensions:\n        - http.method\n        - http.target\n
-    \       - http.status_code\n        - service.name\n        - span.name\n        -
-    span.kind\n        - status.code\n\n\n\ningester:\n  max_block_duration: 5m\n\ncompactor:\n
-    \ compaction:\n    block_retention: 4h       # May need to be kept for longer\n\nstorage:\n
-    \ trace:\n    backend: local\n    wal:\n      path: /var/tempo/wal\n    local:\n
-    \     path: /var/tempo/blocks\n\noverrides:\n  defaults:\n    metrics_generator:\n
-    \     processors: ['local-blocks', 'span-metrics', 'service-graphs']\n\n"
+    to alloy remote write\n      - url: ${ALLOY_PROM_REMOTE:-httpL//nginx-gateway.svc.cluster.local:9090/api/v1/push}\n
+    \       send_exemplars: true\n        send_native_histograms: true\n  processor:\n
+    \   service_graphs:\n      dimensions:\n        - http.method\n        - http.target\n
+    \       - http.status_code\n    span_metrics:\n      dimensions:\n        - http.method\n
+    \       - http.target\n        - http.status_code\n        - service.name\n        -
+    span.name\n        - span.kind\n        - status.code\n\n\n\ningester:\n  max_block_duration:
+    5m\n\ncompactor:\n  compaction:\n    block_retention: 4h       # May need to be
+    kept for longer\n\nstorage:\n  trace:\n    backend: s3\n    wal:\n      path:
+    /var/tempo/wal\n#    Yep, not insecure at all\n    s3:\n      bucket: tempo-data\n
+    \     endpoint: ${TEMPO_S3_ENDPOINT:-minio.minio-store.svc:443}\n      access_key:
+    ${TEMPO_S3_ACCESS_KEY:-bucket}\n      secret_key: ${TEMPO_S3_SECRET_KEY:-supersecret}\n
+    \     insecure: ${TEMPO_S3_INSECURE:-false}\n      tls_insecure_skip_verify: true\n\noverrides:\n
+    \ defaults:\n    metrics_generator:\n      processors: [ 'span-metrics', 'service-graphs']\n\nusage_report:\n
+    \ reporting_enabled: false\n\n"
 kind: ConfigMap
 metadata:
   name: tempo
