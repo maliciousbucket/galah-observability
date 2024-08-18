@@ -21,14 +21,15 @@ spec:
       labels:
         app.kubernetes.io/part-of: memberlist
     spec:
+      automountServiceAccountToken: true
       containers:
         - name: loki
           image: docker.io/grafana/loki:v3.1.1
           imagePullPolicy: IfNotPresent
           args:
-          - config.file=/etc/loki/config/config.yaml
-          - target=all
-          - config.expand-env=true
+          - -config.file=/etc/loki/config/config.yaml
+          - -target=all
+          - -config.expand-env=true
           envFrom:
           - secretRef:
              name: loki-env
@@ -38,6 +39,9 @@ spec:
               protocol: TCP
             - containerPort: 7946
               name: http-memberlist
+              protocol: TCP
+            - containerPort: 3105
+              name: grpc
               protocol: TCP
           readinessProbe:
             httpGet:

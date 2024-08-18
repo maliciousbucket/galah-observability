@@ -6,11 +6,11 @@ metadata:
   namespace: galah-logging
 spec:
   endpoints:
-  - interval: 15a
+  - interval: 15s
     port: http-metrics
     relabelings:
     - action: replace
-      replacement: galah-monitoring/loki
+      replacement: galah-logging/loki
       sourceLabels:
       - job
       targetLabel: job

@@ -5,7 +5,7 @@ namespace: galah-logging
 labels:
   - pairs:
       app.kubernetes.io/component: loki
-      app,kubernetes.io/instance: loki
+      app.kubernetes.io/instance: loki
       app.kubernetes.io/name: loki
     includeSelectors: true
   - pairs:
@@ -20,7 +20,7 @@ images:
 resources:
   - namespace.yaml
   - rbac.yaml
-  - headless.yaml
+#  - headless.yaml
   - memberlist-service.yaml
   - servicemonitor.yaml
   - statefulset.yaml
@@ -33,4 +33,6 @@ configMapGenerator:
   - name: loki-config
     namespace: galah-logging
     files:
-      - configs/loki.yaml
+      - config.yaml=configs/loki.yaml
+    options:
+      disableNameSuffixHash: true

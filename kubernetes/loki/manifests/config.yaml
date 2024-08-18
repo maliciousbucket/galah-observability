@@ -2,8 +2,8 @@ apiVersion: v1
 kind: Namespace
 metadata:
   labels:
-    app,kubernetes.io/instance: loki
     app.kubernetes.io/component: loki
+    app.kubernetes.io/instance: loki
     app.kubernetes.io/managed-by: Kustomize
     app.kubernetes.io/name: loki
     app.kubernetes.io/version: 3.1.1
@@ -14,8 +14,8 @@ automountServiceAccountToken: true
 kind: ServiceAccount
 metadata:
   labels:
-    app,kubernetes.io/instance: loki
     app.kubernetes.io/component: loki
+    app.kubernetes.io/instance: loki
     app.kubernetes.io/managed-by: Kustomize
     app.kubernetes.io/name: loki
     app.kubernetes.io/version: 3.1.1
@@ -26,8 +26,8 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   labels:
-    app,kubernetes.io/instance: loki
     app.kubernetes.io/component: loki
+    app.kubernetes.io/instance: loki
     app.kubernetes.io/managed-by: Kustomize
     app.kubernetes.io/name: loki
     app.kubernetes.io/version: 3.1.1
@@ -47,8 +47,8 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   labels:
-    app,kubernetes.io/instance: loki
     app.kubernetes.io/component: loki
+    app.kubernetes.io/instance: loki
     app.kubernetes.io/managed-by: Kustomize
     app.kubernetes.io/name: loki
     app.kubernetes.io/version: 3.1.1
@@ -64,39 +64,42 @@ subjects:
 ---
 apiVersion: v1
 data:
-  loki.yaml: "auth_enabled: false\n\nserver:\n  http_listen_port: 3100\n  grpc_listen_port:
-    3105\n  log_level: info\n\n#memberlist:\n#  join_members:\n#    - loki-memberlist:7946\n\ncommon:\n
-    \ compactor_address: http://loki:3100\n  # TODO: Set to env\n  instance_addr:
-    127.0.0.1\n  path_prefix: /loki\n\n  storage:\n    s3:\n      bucketnames: loki-data\n
-    \     endpoint: ${LOKI_S3_ENDPOINT:-minio:9000}\n      access_key_id: ${LOKI_S3_KEY_ID:-bucket}\n
-    \     secret_access_key: ${LOKI_S3_SECRET_ACCESS_KEY:-supersecret}\n      insecure:
-    ${LOKI_S3_INSECURE:-true}\n      s3forcepathstyle: true\n      http_config:\n
+  config.yaml: "auth_enabled: false\n\nserver:\n  http_listen_port: 3100\n  grpc_listen_port:
+    3105\n  log_level: info\n\nmemberlist:\n  join_members:\n    - loki-memberlist.galah-logging.svc.cluster.local:7946\n\ncommon:\n
+    \ compactor_address: http://loki.galah-logging.svc.cluster.local:3100\n  # TODO:
+    Set to env\n#  instance_addr: 127.0.0.1\n  path_prefix: /var/loki\n\n  storage:\n
+    \   s3:\n      bucketnames: loki-data\n      endpoint: ${LOKI_S3_ENDPOINT:-minio.minio-store.svc:443}\n
+    \     access_key_id: ${LOKI_S3_KEY_ID:-bucket}\n      secret_access_key: ${LOKI_S3_SECRET_ACCESS_KEY:-supersecret}\n
+    \     insecure: ${LOKI_S3_INSECURE:-false}\n      s3forcepathstyle: true\n      http_config:\n
     \       insecure_skip_verify: true\n\n    # filesystem:\n    #   chunks_directory:
     /loki/chunks  \n    #   rules_directory: /loki/rules    \n  replication_factor:
     1\n  \n  ring:\n    instance_addr: 127.0.0.1\n    #TODO: Look at other options\n
     \   kvstore:\n      store: inmemory\n\nschema_config:\n  configs:\n    - from:
-    2024-08-12\n      store: tsdb\n      object_store: filesystem\n      schema: v13\n
+    2024-08-20\n      store: tsdb\n      object_store: filesystem\n      schema: v13\n
     \     \n      index:\n        prefix: index_\n        period: 24h\n\nstorage_config:\n
-    \ tsdb_shipper:\n    active_index_directory: /loki/index\n    cache_location:
-    /loki/index_cache\n  filesystem:\n    directory: /tmp/loki/chunks\n\n\n\ndistributor:\n
-    \ ring:\n    instance_addr: 127.0.0.1\n    kvstore:\n      store: inmemory\n\n\n\n\ncompactor:\n
-    \ retention_enabled: true\n  retention_delete_delay: 2h\n  delete_request_cancel_period:
-    24h\n  delete_request_store: s3\n  working_directory: /tmp/compactor\n\n\nquery_range:\n
+    \ tsdb_shipper:\n    active_index_directory: /var/loki/index\n    cache_location:
+    /var/loki/index_cache\n    index_gateway_client:\n      server_address: \"dns+loki.galah-logging.svc.cluster.local:3105\"\n#
+    \ filesystem:\n#    directory: /tmp/loki/chunks\n\n\n\n#distributor:\n#  ring:\n#
+    \   instance_addr: 127.0.0.1\n#    kvstore:\n#      store: inmemory\n\nindex_gateway:\n
+    \ mode: simple\n\n\ncompactor:\n  retention_enabled: true\n  retention_delete_delay:
+    2h\n  delete_request_cancel_period: 24h\n  delete_request_store: s3\n  working_directory:
+    /tmp/compactor\n\nbloom_gateway:\n  enabled: true\n  client:\n    addresses: \"dns+loki.galah-logging.svc.cluster.local:3105\"\n\nbloom_compactor:\n
+    \ enabled: true\n  ring:\n    kvstore:\n      store: memberlist\n\n\nquery_range:\n
     \ align_queries_with_step: true\n  cache_results: true\n\nquery_scheduler:\n  max_outstanding_requests_per_tenant:
     2048\n\nfrontend:\n  max_outstanding_per_tenant: 2048\n\ningester:\n  max_chunk_age:
     8h\n  chunk_idle_period: 4h\n\n\npattern_ingester:\n  enabled: true\n\nlimits_config:\n
-    \ volume_enabled: true\n\nruler:\n  #TODO: Set to env\n  alertmanager_url: ${ALERT_MANAGER_URL:-http://mimir:9090/alertmanager}\n
+    \ volume_enabled: true\n\nruler:\n  #TODO: Set to env\n  alertmanager_url: ${ALERT_MANAGER_URL:-mimir.galah-monitoring.svc:9090/alertmanager}\n
     \ enable_api: true\n  storage:\n    s3:\n      bucketnames: loki-ruler\n    type:
     s3\n\nanalytics:\n  reporting_enabled: false"
 kind: ConfigMap
 metadata:
   labels:
-    app,kubernetes.io/instance: loki
     app.kubernetes.io/component: loki
+    app.kubernetes.io/instance: loki
     app.kubernetes.io/managed-by: Kustomize
     app.kubernetes.io/name: loki
     app.kubernetes.io/version: 3.1.1
-  name: loki-config-h2g58b92t8
+  name: loki-config
   namespace: galah-logging
 ---
 apiVersion: v1
@@ -104,8 +107,8 @@ data: {}
 kind: Secret
 metadata:
   labels:
-    app,kubernetes.io/instance: loki
     app.kubernetes.io/component: loki
+    app.kubernetes.io/instance: loki
     app.kubernetes.io/managed-by: Kustomize
     app.kubernetes.io/name: loki
     app.kubernetes.io/version: 3.1.1
@@ -116,9 +119,12 @@ type: Opaque
 apiVersion: v1
 kind: Service
 metadata:
+  annotations:
+    prometheus.io/port: "3100"
+    prometheus.io/scrape: "true"
   labels:
-    app,kubernetes.io/instance: loki
     app.kubernetes.io/component: loki
+    app.kubernetes.io/instance: loki
     app.kubernetes.io/managed-by: Kustomize
     app.kubernetes.io/name: loki
     app.kubernetes.io/version: 3.1.1
@@ -128,39 +134,23 @@ spec:
   ports:
   - name: http-metrics
     port: 3100
+    protocol: TCP
+    targetPort: http-metrics
+  - appProtocol: grpc
+    name: grpc
+    port: 3105
   selector:
-    app,kubernetes.io/instance: loki
     app.kubernetes.io/component: loki
+    app.kubernetes.io/instance: loki
     app.kubernetes.io/name: loki
+  type: ClusterIP
 ---
 apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app,kubernetes.io/instance: loki
     app.kubernetes.io/component: loki
-    app.kubernetes.io/managed-by: Kustomize
-    app.kubernetes.io/name: loki
-    app.kubernetes.io/version: 3.1.1
-    prometheus.io/service-monitor: "false"
-  name: loki-headless
-  namespace: galah-logging
-spec:
-  clusterIP: none
-  ports:
-  - name: http-metrics
-    port: 3100
-  selector:
-    app,kubernetes.io/instance: loki
-    app.kubernetes.io/component: loki
-    app.kubernetes.io/name: loki
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    app,kubernetes.io/instance: loki
-    app.kubernetes.io/component: loki
+    app.kubernetes.io/instance: loki
     app.kubernetes.io/managed-by: Kustomize
     app.kubernetes.io/name: loki
     app.kubernetes.io/version: 3.1.1
@@ -174,8 +164,8 @@ spec:
     port: 7946
   publishNotReadyAddresses: true
   selector:
-    app,kubernetes.io/instance: loki
     app.kubernetes.io/component: loki
+    app.kubernetes.io/instance: loki
     app.kubernetes.io/name: loki
     app.kubernetes.io/part-of: memberlist
 ---
@@ -183,8 +173,8 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   labels:
-    app,kubernetes.io/instance: loki
     app.kubernetes.io/component: loki
+    app.kubernetes.io/instance: loki
     app.kubernetes.io/managed-by: Kustomize
     app.kubernetes.io/name: loki
     app.kubernetes.io/part-of: memberlist
@@ -199,24 +189,25 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app,kubernetes.io/instance: loki
       app.kubernetes.io/component: loki
+      app.kubernetes.io/instance: loki
       app.kubernetes.io/name: loki
       app.kubernetes.io/part-of: memberlist
   serviceName: loki-headless
   template:
     metadata:
       labels:
-        app,kubernetes.io/instance: loki
         app.kubernetes.io/component: loki
+        app.kubernetes.io/instance: loki
         app.kubernetes.io/name: loki
         app.kubernetes.io/part-of: memberlist
     spec:
+      automountServiceAccountToken: true
       containers:
       - args:
-        - config.file=/etc/loki/config/config.yaml
-        - target=all
-        - config.expand-env=true
+        - -config.file=/etc/loki/config/config.yaml
+        - -target=all
+        - -config.expand-env=true
         envFrom:
         - secretRef:
             name: loki-env-46f8b28mk5
@@ -229,6 +220,9 @@ spec:
           protocol: TCP
         - containerPort: 7946
           name: http-memberlist
+          protocol: TCP
+        - containerPort: 3105
+          name: grpc
           protocol: TCP
         readinessProbe:
           httpGet:
@@ -269,7 +263,7 @@ spec:
           items:
           - key: config.yaml
             path: config.yaml
-          name: loki-config-h2g58b92t8
+          name: loki-config
         name: config
   updateStrategy:
     rollingUpdate:
@@ -279,8 +273,8 @@ spec:
     kind: PersistentVolumeClaim
     metadata:
       labels:
-        app,kubernetes.io/instance: loki
         app.kubernetes.io/component: loki
+        app.kubernetes.io/instance: loki
         app.kubernetes.io/name: loki
       name: storage
     spec:
@@ -294,8 +288,8 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   labels:
-    app,kubernetes.io/instance: loki
     app.kubernetes.io/component: loki
+    app.kubernetes.io/instance: loki
     app.kubernetes.io/managed-by: Kustomize
     app.kubernetes.io/name: loki
     app.kubernetes.io/version: 3.1.1
@@ -303,11 +297,11 @@ metadata:
   namespace: galah-logging
 spec:
   endpoints:
-  - interval: 15a
+  - interval: 15s
     port: http-metrics
     relabelings:
     - action: replace
-      replacement: galah-monitoring/loki
+      replacement: galah-logging/loki
       sourceLabels:
       - job
       targetLabel: job
