@@ -1,0 +1,263 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: galah-tracing
+---
+apiVersion: v1
+automountServiceAccountToken: true
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/instance: tempo
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: tempo
+    app.kubernetes.io/version: 2.5.0
+    helm.sh/chart: tempo-1.10.3
+  name: tempo
+  namespace: galah-tracing
+---
+apiVersion: v1
+data:
+  overrides.yaml: |
+    overrides:
+      {}
+  tempo.yaml: |
+    multitenancy_enabled: false
+    usage_report:
+      reporting_enabled: true
+    compactor:
+      compaction:
+        block_retention: 24h
+    distributor:
+      receivers:
+            jaeger:
+              protocols:
+                grpc:
+                  endpoint: 0.0.0.0:14250
+                thrift_binary:
+                  endpoint: 0.0.0.0:6832
+                thrift_compact:
+                  endpoint: 0.0.0.0:6831
+                thrift_http:
+                  endpoint: 0.0.0.0:14268
+            opencensus: null
+            otlp:
+              protocols:
+                grpc:
+                  endpoint: 0.0.0.0:4317
+                http:
+                  endpoint: 0.0.0.0:4318
+    ingester:
+          {}
+    server:
+          http_listen_port: 3100
+    storage:
+          trace:
+            backend: local
+            local:
+              path: /var/tempo/traces
+            wal:
+              path: /var/tempo/wal
+    querier:
+          {}
+    query_frontend:
+          {}
+    overrides:
+          per_tenant_override_config: /conf/overrides.yaml
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/instance: tempo
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: tempo
+    app.kubernetes.io/version: 2.5.0
+    helm.sh/chart: tempo-1.10.3
+  name: tempo
+  namespace: galah-tracing
+---
+apiVersion: v1
+data:
+  tempo-query.yaml: |
+    backend: tempo:3100
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/instance: tempo
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: tempo
+    app.kubernetes.io/version: 2.5.0
+    helm.sh/chart: tempo-1.10.3
+  name: tempo-query
+  namespace: galah-tracing
+---
+apiVersion: v1
+data: {}
+kind: Secret
+metadata:
+  name: tempo-env-46f8b28mk5
+  namespace: galah-tracing
+type: Opaque
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/instance: tempo
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: tempo
+    app.kubernetes.io/version: 2.5.0
+    helm.sh/chart: tempo-1.10.3
+  name: tempo
+  namespace: galah-tracing
+spec:
+  ports:
+  - name: tempo-prom-metrics
+    port: 3100
+    targetPort: 3100
+  - name: jaeger-metrics
+    port: 16687
+    targetPort: 16687
+  - name: tempo-query-jaeger-ui
+    port: 16686
+    targetPort: 16686
+  - name: tempo-jaeger-thrift-compact
+    port: 6831
+    protocol: UDP
+    targetPort: 6831
+  - name: tempo-jaeger-thrift-binary
+    port: 6832
+    protocol: UDP
+    targetPort: 6832
+  - name: tempo-jaeger-thrift-http
+    port: 14268
+    protocol: TCP
+    targetPort: 14268
+  - name: grpc-tempo-jaeger
+    port: 14250
+    protocol: TCP
+    targetPort: 14250
+  - name: tempo-zipkin
+    port: 9411
+    protocol: TCP
+    targetPort: 9411
+  - name: tempo-otlp-legacy
+    port: 55680
+    protocol: TCP
+    targetPort: 55680
+  - name: tempo-otlp-http-legacy
+    port: 55681
+    protocol: TCP
+    targetPort: 4318
+  - name: grpc-tempo-otlp
+    port: 4317
+    protocol: TCP
+    targetPort: 4317
+  - name: tempo-otlp-http
+    port: 4318
+    protocol: TCP
+    targetPort: 4318
+  - name: tempo-opencensus
+    port: 55678
+    protocol: TCP
+    targetPort: 55678
+  selector:
+    app.kubernetes.io/instance: tempo
+    app.kubernetes.io/name: tempo
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app.kubernetes.io/instance: tempo
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: tempo
+    app.kubernetes.io/version: 2.5.0
+    helm.sh/chart: tempo-1.10.3
+  name: tempo
+  namespace: galah-tracing
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: tempo
+      app.kubernetes.io/name: tempo
+  serviceName: tempo-headless
+  template:
+    metadata:
+      annotations:
+        checksum/config: 85853f7d95277a1d67ca9360b469393d2f030dcdca3094bf77be7b0fa4862426
+        logs.grafana.com/scrape: "true"
+      labels:
+        app.kubernetes.io/instance: tempo
+        app.kubernetes.io/name: tempo
+    spec:
+      automountServiceAccountToken: true
+      containers:
+      - args:
+        - -config.file=/conf/tempo.yaml
+        - -mem-ballast-size-mbs=1024
+        env: null
+        image: grafana/tempo:2.5.0
+        imagePullPolicy: IfNotPresent
+        name: tempo
+        ports:
+        - containerPort: 3100
+          name: prom-metrics
+        - containerPort: 6831
+          name: jaeger-thrift-c
+          protocol: UDP
+        - containerPort: 6832
+          name: jaeger-thrift-b
+          protocol: UDP
+        - containerPort: 14268
+          name: jaeger-thrift-h
+        - containerPort: 14250
+          name: jaeger-grpc
+        - containerPort: 9411
+          name: zipkin
+        - containerPort: 55680
+          name: otlp-legacy
+        - containerPort: 4317
+          name: otlp-grpc
+        - containerPort: 55681
+          name: otlp-httplegacy
+        - containerPort: 4318
+          name: otlp-http
+        - containerPort: 55678
+          name: opencensus
+        resources: {}
+        volumeMounts:
+        - mountPath: /conf
+          name: tempo-conf
+      - args:
+        - --query.base-path=/
+        - --grpc-storage-plugin.configuration-file=/conf/tempo-query.yaml
+        env: null
+        image: grafana/tempo-query:2.5.0
+        imagePullPolicy: IfNotPresent
+        name: tempo-query
+        ports:
+        - containerPort: 16686
+          name: jaeger-ui
+        - containerPort: 16687
+          name: jaeger-metrics
+        resources: {}
+        volumeMounts:
+        - mountPath: /conf
+          name: tempo-query-conf
+      securityContext:
+        fsGroup: 10001
+        runAsGroup: 10001
+        runAsNonRoot: true
+        runAsUser: 10001
+      serviceAccountName: tempo
+      volumes:
+      - configMap:
+          name: tempo-query
+        name: tempo-query-conf
+      - configMap:
+          name: tempo
+        name: tempo-conf
+  updateStrategy:
+    type: RollingUpdate

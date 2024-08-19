@@ -45,7 +45,7 @@ metrics_generator:
     path: /var/tempo/wal
     remote_write:
 #      TODO: Change to alloy remote write
-      - url: ${ALLOY_PROM_REMOTE:-httpL//nginx-gateway.svc.cluster.local:9090/api/v1/push}
+      - url: ${ALLOY_PROM_REMOTE:-http//nginx-gateway.svc.cluster.local:9090/api/v1/push}
         send_exemplars: true
         send_native_histograms: true
   processor:
