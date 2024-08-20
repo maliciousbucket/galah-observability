@@ -20,11 +20,15 @@ apiVersion: v1
 data:
   overrides.yaml: |
     overrides:
-      {}
+      defaults:
+        metrics_generator:
+          processors:
+          - span_metrics
+          - service_graphs
   tempo.yaml: |
     multitenancy_enabled: false
     usage_report:
-      reporting_enabled: true
+      reporting_enabled: false
     compactor:
       compaction:
         block_retention: 24h
@@ -48,14 +52,22 @@ data:
                 http:
                   endpoint: 0.0.0.0:4318
     ingester:
-          {}
+          max_block_duration: 5m
     server:
-          http_listen_port: 3100
+          grpc_listen_port: 3205
+          http_listen_port: 3200
     storage:
           trace:
-            backend: local
+            backend: s3
             local:
               path: /var/tempo/traces
+            s3:
+              access_key: bucket
+              bucket: tempo-data
+              endpoint: minio.minio-store.svc:443
+              insecure: false
+              secret_key: supersecret
+              tls_insecure_skip_verify: true
             wal:
               path: /var/tempo/wal
     querier:
@@ -64,6 +76,14 @@ data:
           {}
     overrides:
           per_tenant_override_config: /conf/overrides.yaml
+          metrics_generator_processors:
+          - 'service-graphs'
+          - 'span-metrics'
+    metrics_generator:
+          storage:
+            path: "/tmp/tempo"
+            remote_write:
+              - url: httpL//nginx-gateway.svc.cluster.local:9090/api/v1/push
 kind: ConfigMap
 metadata:
   labels:
@@ -73,21 +93,6 @@ metadata:
     app.kubernetes.io/version: 2.5.0
     helm.sh/chart: tempo-1.10.3
   name: tempo
-  namespace: galah-tracing
----
-apiVersion: v1
-data:
-  tempo-query.yaml: |
-    backend: tempo:3100
-kind: ConfigMap
-metadata:
-  labels:
-    app.kubernetes.io/instance: tempo
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: tempo
-    app.kubernetes.io/version: 2.5.0
-    helm.sh/chart: tempo-1.10.3
-  name: tempo-query
   namespace: galah-tracing
 ---
 apiVersion: v1
@@ -111,15 +116,15 @@ metadata:
   namespace: galah-tracing
 spec:
   ports:
+  - name: grpc
+    port: 3205
+    targetPort: 3205
+  - name: http-metrics
+    port: 3200
+    targetPort: 3200
   - name: tempo-prom-metrics
     port: 3100
     targetPort: 3100
-  - name: jaeger-metrics
-    port: 16687
-    targetPort: 16687
-  - name: tempo-query-jaeger-ui
-    port: 16686
-    targetPort: 16686
   - name: tempo-jaeger-thrift-compact
     port: 6831
     protocol: UDP
@@ -186,7 +191,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: 85853f7d95277a1d67ca9360b469393d2f030dcdca3094bf77be7b0fa4862426
+        checksum/config: abd8eb6a53648152f3bd3e0793a657aa745a74ae76477be0182f4c6273eb4ba2
         logs.grafana.com/scrape: "true"
       labels:
         app.kubernetes.io/instance: tempo
@@ -197,11 +202,15 @@ spec:
       - args:
         - -config.file=/conf/tempo.yaml
         - -mem-ballast-size-mbs=1024
-        env: null
+        - -config.expand-env=true
         image: grafana/tempo:2.5.0
         imagePullPolicy: IfNotPresent
         name: tempo
         ports:
+        - containerPort: 3205
+          name: grpc
+        - containerPort: 3200
+          name: http-metrics
         - containerPort: 3100
           name: prom-metrics
         - containerPort: 6831
@@ -230,22 +239,8 @@ spec:
         volumeMounts:
         - mountPath: /conf
           name: tempo-conf
-      - args:
-        - --query.base-path=/
-        - --grpc-storage-plugin.configuration-file=/conf/tempo-query.yaml
-        env: null
-        image: grafana/tempo-query:2.5.0
-        imagePullPolicy: IfNotPresent
-        name: tempo-query
-        ports:
-        - containerPort: 16686
-          name: jaeger-ui
-        - containerPort: 16687
-          name: jaeger-metrics
-        resources: {}
-        volumeMounts:
-        - mountPath: /conf
-          name: tempo-query-conf
+        - mountPath: /tmp
+          name: tmp
       securityContext:
         fsGroup: 10001
         runAsGroup: 10001
@@ -254,10 +249,9 @@ spec:
       serviceAccountName: tempo
       volumes:
       - configMap:
-          name: tempo-query
-        name: tempo-query-conf
-      - configMap:
           name: tempo
         name: tempo-conf
+      - emptyDir: {}
+        name: tmp
   updateStrategy:
     type: RollingUpdate

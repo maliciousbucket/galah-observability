@@ -52,7 +52,7 @@ data:
     5s\n\n#querier:\n#  frontend_worker:\n#    frontend_address: tempo:3205\n\n\nmetrics_generator:\n
     \ registry:\n    external_labels:\n      source: tempo\n      collection_interval:
     5s\n  storage:\n    path: /var/tempo/wal\n    remote_write:\n#      TODO: Change
-    to alloy remote write\n      - url: ${ALLOY_PROM_REMOTE:-httpL//nginx-gateway.svc.cluster.local:9090/api/v1/push}\n
+    to alloy remote write\n      - url: ${ALLOY_PROM_REMOTE:-http//nginx-gateway.svc.cluster.local:9090/api/v1/push}\n
     \       send_exemplars: true\n        send_native_histograms: true\n  processor:\n
     \   service_graphs:\n      dimensions:\n        - http.method\n        - http.target\n
     \       - http.status_code\n    span_metrics:\n      dimensions:\n        - http.method\n

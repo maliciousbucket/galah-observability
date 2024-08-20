@@ -5,27 +5,29 @@ labels:
   app.kubernetes.io/name: tempo
 
 tempo:
-
   reportingEnabled: false
+
   metricsGenerator:
     enabled: true
     remoteWriteUrl: "httpL//nginx-gateway.svc.cluster.local:9090/api/v1/push"
+    #    //TODO: Move everything into config
+    #    //TODO: Add extra contaienr ports
 
     processor:
       span_metrics:
         dimensions:
-        - http.method
-        - http.target
-        - http.status_code
-        - service.name
-        - span.name
-        - span.kind
-        - status.code
+          - http.method
+          - http.target
+          - http.status_code
+          - service.name
+          - span.name
+          - span.kind
+          - status.code
       service_graphs:
         dimensions:
-        - http.method
-        - http.target
-        - http.status_code
+          - http.method
+          - http.target
+          - http.status_code
     storage:
       path: /var/tempo/wal
       send_exemplars: true
@@ -34,6 +36,7 @@ tempo:
       external_labels:
         source: tempo
         collection_interval: 5s
+
   server:
     # -- HTTP server listen port
     http_listen_port: 3200
@@ -41,8 +44,8 @@ tempo:
   storage:
     trace:
       backend: s3
-#      local:
-#        path: /var/tempo/traces
+      #      local:
+      #        path: /var/tempo/traces
       wal:
         path: /var/tempo/wal
       s3:
@@ -75,13 +78,9 @@ tempo:
   overrides:
     defaults:
       metrics_generator:
-        processors: ['span_metrics', 'service_graphs']
+        processors: [ 'span_metrics', 'service_graphs' ]
   extraArgs:
-    config.expand-env: true
-#  extraEnv:
-#    extraEnvFrom:
-#      - secretRef:
-#          name: tempo-env
-
-#tempoQuery:
-#  enabled: true
+    - -config.expand-env=true
+  extraEnvFrom:
+    - secretRef:
+        name: tempo-env
