@@ -24,8 +24,12 @@ configMapGenerator:
 - name: nginx-entry-scripts
   namespace: gateway
   files:
-    - nginx/entrypoint.d/default-env.envsh
-    - nginx/entrypoint.d/local-resolvers.sh
+    - nginx/docker-entrypoint.d/default-env.envsh
+    - nginx/docker-entrypoint.d/local-resolvers.sh
+    - nginx/docker-entrypoint.d/listen-ipv6.sh
+    - nginx/docker-entrypoint.d/env-templates.sh
+  options:
+    disableNameSuffixHash: true
 - name: nginx-templates
   namespace: gateway
   options:

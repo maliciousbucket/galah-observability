@@ -6,45 +6,60 @@ metadata:
 apiVersion: v1
 data:
   nginx.conf.template: |-
-    worker_processes auto;
-    error_log /dev/stderr error;
+    # worker_processes  auto;
+    error_log  /dev/stderr error;
     pid        /tmp/nginx.pid;
     worker_rlimit_nofile 8192;
 
     events {
-        worker_connections 2048;
+      worker_connections  4096;  ## Default: 1024
     }
 
     http {
+      client_body_temp_path /tmp/client_temp;
+      proxy_temp_path       /tmp/proxy_temp_path;
+      fastcgi_temp_path     /tmp/fastcgi_temp;
+      uwsgi_temp_path       /tmp/uwsgi_temp;
+      scgi_temp_path        /tmp/scgi_temp;
 
-        map $status $loggable {
+      client_max_body_size  4M;
+
+      proxy_read_timeout    600; ## 10 minutes
+      proxy_send_timeout    600;
+      proxy_connect_timeout 600;
+
+      proxy_http_version    1.1;
+
+      default_type application/octet-stream;
+      log_format   main '$remote_addr - $remote_user [$time_local]  $status '
+            '"$request" $body_bytes_sent "$http_referer" '
+            '"$http_user_agent" "$http_x_forwarded_for"';
+
+      map $status $loggable {
         ~^[23]  0;
         default 1;
-        }
+      }
 
-        access_log   /dev/stderr  main if=$loggable;
+      access_log   /dev/stderr  main if=$loggable;
 
-        proxy_http_version 1.1;
-        sendfile     on;
-        tcp_nopush   on;
+      sendfile     on;
+      tcp_nopush   on;
 
-        proxy_read_timeout    30;
-        proxy_send_timeout    30;
-        proxy_connect_timeout 30;
+      resolver kube-dns.kube-system.svc.cluster.local;
 
-        client_body_temp_path /tmp/client_temp;
-        proxy_temp_path       /tmp/proxy_temp_path;
-        fastcgi_temp_path     /tmp/fastcgi_temp;
-        uwsgi_temp_path       /tmp/uwsgi_temp;
-        scgi_temp_path        /tmp/scgi_temp;
+      # Ensure that X-Scope-OrgID is always present, default to the no_auth_tenant for backwards compatibility when multi-tenancy was turned off.
+      map $http_x_scope_orgid $ensured_x_scope_orgid {
+        default $http_x_scope_orgid;
+        "" "anonymous";
+      }
 
-        resolver kube-dns.kube-system.svc.cluster.local;
+      proxy_set_header X-Scope-OrgID $ensured_x_scope_orgid;
 
-        include /etc/nginx/gateway_*.conf;
+      include /etc/nginx/gateway_*.conf;
     }
 kind: ConfigMap
 metadata:
-  name: nginx-conf-dg8g6bk2m4
+  name: nginx-conf-t7d7g2fmgb
   namespace: gateway
 ---
 apiVersion: v1
@@ -54,28 +69,171 @@ data:
 
     set -eu
 
-    export MIMIR_DISTRIBUTOR_HOST="${MIMIR_DISTRIBUTOR_HOST:-mimir.galah-monitoring.svc.cluster.local}"
-    export MIMIR_QUERY_FRONTEND_HOST="${MIMIR_QUERY_FRONTEND_HOST:-mimir.galah-monitoring.svc.cluster.local}"
-    export MIMIR_ALERT_MANAGER_HOST="${MIMIR_ALERT_MANAGER_HOST:-mimir.galah-monitoring.svc.cluster.local}"
-    export MIMIR_RULER_HOST="${MIMIR_RULER_HOST:-mimir.galah-monitoring.svc.cluster.local}"
-    export MIMIR_COMPACTOR_HOST="${MIMIR_COMPACTOR_HOST:-mimir.galah-monitoring.svc.cluster.local}"
+    export MIMIR_DISTRIBUTOR_HOST=${MIMIR_DISTRIBUTOR_HOST:-mimir.galah-monitoring.svc.cluster.local}
+    export MIMIR_QUERY_FRONTEND_HOST=${MIMIR_QUERY_FRONTEND_HOST:-mimir.galah-monitoring.svc.cluster.local}
+    export MIMIR_ALERT_MANAGER_HOST=${MIMIR_ALERT_MANAGER_HOST:-mimir.galah-monitoring.svc.cluster.local}
+    export MIMIR_RULER_HOST=${MIMIR_RULER_HOST:-mimir.galah-monitoring.svc.cluster.local}
+    export MIMIR_COMPACTOR_HOST=${MIMIR_COMPACTOR_HOST:-mimir.galah-monitoring.svc.cluster.local}
 
-    # Default value is Loki in monolithic mode
-    export LOKI_DISTRIBUTOR_HOST="${LOKI_DISTRIBUTOR_HOST:-loki.galah-logging.svc.cluster.local}"
-    export LOKI_INGESTER_HOST="${LOKI_INGESTER_HOST:-loki.galah-logging.svc.cluster.local}"
-    export LOKI_RULER_HOST="${LOKI_RULER_HOST:-loki.galah-logging.svc.cluster.local}"
-    export LOKI_COMPACTOR_HOST="${LOKI_COMPACTOR_HOST:-loki.galah-logging.svc.cluster.local}"
-    export LOKI_QUERY_FRONTEND_HOST="${LOKI_QUERY_FRONTEND_HOST:-loki.galah-logging.svc.cluster.local}"
 
-    # Default value is tempo in monolithic mode
-    export TEMPO_DISTRIBUTOR_HOST="${TEMPO_DISTRIBUTOR_HOST:-tempo.galah-tracing.svc.cluster.local}"
-    export TEMPO_INGESTER_HOST="${TEMPO_INGESTER_HOST:-tempo.galah-tracing.svc.cluster.local}"
-    export TEMPO_QUERY_FRONTEND_HOST="${TEMPO_QUERY_FRONTEND_HOST:-tempo.galah-tracing.svc.cluster.local}"
-    export TEMPO_COMPACTOR_HOST="${TEMPO_COMPACTOR_HOST:-tempo.galah-tracing.svc.cluster.local}"
+    export LOKI_DISTRIBUTOR_HOST=${LOKI_DISTRIBUTOR_HOST:-loki.galah-logging.svc.cluster.local}
+    export LOKI_INGESTER_HOST=${LOKI_INGESTER_HOST:-loki.galah-logging.svc.cluster.local}
+    export LOKI_RULER_HOST=${LOKI_RULER_HOST:-loki.galah-logging.svc.cluster.local}
+    export LOKI_COMPACTOR_HOST=${LOKI_COMPACTOR_HOST:-loki.galah-logging.svc.cluster.local}
+    export LOKI_QUERY_FRONTEND_HOST=${LOKI_QUERY_FRONTEND_HOST:-loki.galah-logging.svc.cluster.local}
 
-    export NGINX_ENVSUBST_OUTPUT_DIR="${NGINX_ENVSUBST_OUTPUT_DIR:-/etc/nginx}"
+    export TEMPO_DISTRIBUTOR_HOST=${TEMPO_DISTRIBUTOR_HOST:-tempo.galah-tracing.svc.cluster.local}
+    export TEMPO_INGESTER_HOST=${TEMPO_INGESTER_HOST:-tempo.galah-tracing.svc.cluster.local}
+    export TEMPO_QUERY_FRONTEND_HOST=${TEMPO_QUERY_FRONTEND_HOST:-tempo.galah-tracing.svc.cluster.local}
+    export TEMPO_COMPACTOR_HOST=${TEMPO_COMPACTOR_HOST:-tempo.galah-tracing.svc.cluster.local}
+
+    export NGINX_ENVSUBST_OUTPUT_DIR=${NGINX_ENVSUBST_OUTPUT_DIR:-/etc/nginx}
 
     env
+  env-templates.sh: |
+    #!/bin/sh
+
+    set -e
+
+    ME=$(basename "$0")
+
+    entrypoint_log() {
+        if [ -z "${NGINX_ENTRYPOINT_QUIET_LOGS:-}" ]; then
+            echo "$@"
+        fi
+    }
+
+    add_stream_block() {
+      local conffile="/etc/nginx/nginx.conf"
+
+      if grep -q -E "\s*stream\s*\{" "$conffile"; then
+        entrypoint_log "$ME: $conffile contains a stream block; include $stream_output_dir/*.conf to enable stream templates"
+      else
+        # check if the file can be modified, e.g. not on a r/o filesystem
+        touch "$conffile" 2>/dev/null || { entrypoint_log "$ME: info: can not modify $conffile (read-only file system?)"; exit 0; }
+        entrypoint_log "$ME: Appending stream block to $conffile to include $stream_output_dir/*.conf"
+        cat << END >> "$conffile"
+    # added by "$ME" on "$(date)"
+    stream {
+      include $stream_output_dir/*.conf;
+    }
+    END
+      fi
+    }
+
+    auto_envsubst() {
+      local template_dir="${NGINX_ENVSUBST_TEMPLATE_DIR:-/etc/nginx/templates}"
+      local suffix="${NGINX_ENVSUBST_TEMPLATE_SUFFIX:-.template}"
+      local output_dir="${NGINX_ENVSUBST_OUTPUT_DIR:-/etc/nginx/conf.d}"
+      local stream_suffix="${NGINX_ENVSUBST_STREAM_TEMPLATE_SUFFIX:-.stream-template}"
+      local stream_output_dir="${NGINX_ENVSUBST_STREAM_OUTPUT_DIR:-/etc/nginx/stream-conf.d}"
+      local filter="${NGINX_ENVSUBST_FILTER:-}"
+
+      local template defined_envs relative_path output_path subdir
+      defined_envs=$(printf '${%s} ' $(awk "END { for (name in ENVIRON) { print ( name ~ /${filter}/ ) ? name : \"\" } }" < /dev/null ))
+      [ -d "$template_dir" ] || return 0
+      if [ ! -w "$output_dir" ]; then
+        entrypoint_log "$ME: ERROR: $template_dir exists, but $output_dir is not writable"
+        return 0
+      fi
+      find "$template_dir" -follow -type f -name "*$suffix" -print | while read -r template; do
+        relative_path="${template#"$template_dir/"}"
+        output_path="$output_dir/${relative_path%"$suffix"}"
+        subdir=$(dirname "$relative_path")
+        # create a subdirectory where the template file exists
+        mkdir -p "$output_dir/$subdir"
+        entrypoint_log "$ME: Running envsubst on $template to $output_path"
+        envsubst "$defined_envs" < "$template" > "$output_path"
+      done
+
+      # Print the first file with the stream suffix, this will be false if there are none
+      if test -n "$(find "$template_dir" -name "*$stream_suffix" -print -quit)"; then
+        mkdir -p "$stream_output_dir"
+        if [ ! -w "$stream_output_dir" ]; then
+          entrypoint_log "$ME: ERROR: $template_dir exists, but $stream_output_dir is not writable"
+          return 0
+        fi
+        add_stream_block
+        find "$template_dir" -follow -type f -name "*$stream_suffix" -print | while read -r template; do
+          relative_path="${template#"$template_dir/"}"
+          output_path="$stream_output_dir/${relative_path%"$stream_suffix"}"
+          subdir=$(dirname "$relative_path")
+          # create a subdirectory where the template file exists
+          mkdir -p "$stream_output_dir/$subdir"
+          entrypoint_log "$ME: Running envsubst on $template to $output_path"
+          envsubst "$defined_envs" < "$template" > "$output_path"
+        done
+      fi
+    }
+
+    auto_envsubst
+  listen-ipv6.sh: |-
+    #!/bin/sh
+
+    set -e
+
+    entrypoint_log() {
+        if [ -z "${NGINX_ENTRYPOINT_QUIET_LOGS:-}" ]; then
+            echo "$@"
+        fi
+    }
+
+    ME=$(basename "$0")
+    DEFAULT_CONF_FILE="etc/nginx/conf.d/default.conf"
+
+    # check if we have ipv6 available
+    if [ ! -f "/proc/net/if_inet6" ]; then
+        entrypoint_log "$ME: info: ipv6 not available"
+        exit 0
+    fi
+
+    if [ ! -f "/$DEFAULT_CONF_FILE" ]; then
+        entrypoint_log "$ME: info: /$DEFAULT_CONF_FILE is not a file or does not exist"
+        exit 0
+    fi
+
+    # check if the file can be modified, e.g. not on a r/o filesystem
+    touch /$DEFAULT_CONF_FILE 2>/dev/null || { entrypoint_log "$ME: info: can not modify /$DEFAULT_CONF_FILE (read-only file system?)"; exit 0; }
+
+    # check if the file is already modified, e.g. on a container restart
+    grep -q "listen  \[::]\:80;" /$DEFAULT_CONF_FILE && { entrypoint_log "$ME: info: IPv6 listen already enabled"; exit 0; }
+
+    if [ -f "/etc/os-release" ]; then
+        . /etc/os-release
+    else
+        entrypoint_log "$ME: info: can not guess the operating system"
+        exit 0
+    fi
+
+    entrypoint_log "$ME: info: Getting the checksum of /$DEFAULT_CONF_FILE"
+
+    case "$ID" in
+        "debian")
+            CHECKSUM=$(dpkg-query --show --showformat='${Conffiles}\n' nginx | grep $DEFAULT_CONF_FILE | cut -d' ' -f 3)
+            echo "$CHECKSUM  /$DEFAULT_CONF_FILE" | md5sum -c - >/dev/null 2>&1 || {
+                entrypoint_log "$ME: info: /$DEFAULT_CONF_FILE differs from the packaged version"
+                exit 0
+            }
+            ;;
+        "alpine")
+            CHECKSUM=$(apk manifest nginx 2>/dev/null| grep $DEFAULT_CONF_FILE | cut -d' ' -f 1 | cut -d ':' -f 2)
+            echo "$CHECKSUM  /$DEFAULT_CONF_FILE" | sha1sum -c - >/dev/null 2>&1 || {
+                entrypoint_log "$ME: info: /$DEFAULT_CONF_FILE differs from the packaged version"
+                exit 0
+            }
+            ;;
+        *)
+            entrypoint_log "$ME: info: Unsupported distribution"
+            exit 0
+            ;;
+    esac
+
+    # enable ipv6 on default.conf listen sockets
+    sed -i -E 's,listen       80;,listen       80;\n    listen  [::]:80;,' /$DEFAULT_CONF_FILE
+
+    entrypoint_log "$ME: info: Enabled listen on IPv6 in /$DEFAULT_CONF_FILE"
+
+    exit 0
   local-resolvers.sh: |-
     #!/bin/sh
 
@@ -90,7 +248,7 @@ data:
     export NGINX_LOCAL_RESOLVERS
 kind: ConfigMap
 metadata:
-  name: nginx-entry-scripts-mgf7btd95g
+  name: nginx-entry-scripts
   namespace: gateway
 ---
 apiVersion: v1
@@ -257,15 +415,15 @@ data:
     # upstream grpc_tempo {
     #     server ${TEMPO_DISTRIBUTOR_HOST}:3205;
     # }
-
-    server {
-        listen 3205;
-        http2 on;
-
-        location / {
-            grpc_pass grpc://grpc_tempo;
-        }
-    }
+    #
+    # server {
+    #     listen 3205;
+    #     http2 on;
+    #
+    #     location / {
+    #         grpc_pass grpc://grpc_tempo;
+    #     }
+    # }
 
 
     server {
@@ -303,23 +461,23 @@ data:
         }
 
         location = /status {
-            proxy_pass http://${TEMPO_FRONTEND_HOST}:3200$request_uri;
+            proxy_pass http://${TEMPO_QUERY_FRONTEND_HOST}:3200$request_uri;
         }
 
         location = /api/status/buildinfo {
-            proxy_pass http://${TEMPO_FRONTEND_HOST}:3200$request_uri;
+            proxy_pass http://${TEMPO_QUERY_FRONTEND_HOST}:3200$request_uri;
         }
 
 
         # Distributor
 
 
-        location = /v1/traces {
-          proxy_pass      http://${TEMPO_DISTRIBUTOR_HOST}:3205/v1/traces;
-        }
-        location = /otlp/v1/traces {
-          proxy_pass      http://${TEMPO_DISTRIBUTOR_HOST}:3205/v1/traces;
-        }
+    #     location = /v1/traces {
+    #       proxy_pass      http://${TEMPO_DISTRIBUTOR_HOST}:3205/v1/traces;
+    #     }
+    #     location = /otlp/v1/traces {
+    #       proxy_pass      http://${TEMPO_DISTRIBUTOR_HOST}:3205/v1/traces;
+    #     }
 
         location = /distributor/ring {
           proxy_pass      http://${TEMPO_DISTRIBUTOR_HOST}:3200$request_uri;
@@ -329,11 +487,11 @@ data:
 
 
         location = /ingester/ring {
-            proxy_pass http://${TEMP_INGESTER_HOST}:3200$request_uri;
+            proxy_pass http://${TEMPO_INGESTER_HOST}:3200$request_uri;
         }
 
         location = /memberlist {
-            proxy_pass http://${TEMP_INGESTER_HOST}:3200$request_uri;
+            proxy_pass http://${TEMPO_INGESTER_HOST}:3200$request_uri;
         }
 
 
@@ -434,12 +592,12 @@ spec:
         projected:
           sources:
           - configMap:
-              name: nginx-conf-dg8g6bk2m4
+              name: nginx-conf-t7d7g2fmgb
           - configMap:
               name: nginx-templates
       - emptyDir: {}
         name: entry-scripts
       - configMap:
           defaultMode: 511
-          name: nginx-entry-scripts-mgf7btd95g
+          name: nginx-entry-scripts
         name: configmap-scripts
