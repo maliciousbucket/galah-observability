@@ -29,7 +29,7 @@ datasources:
     type: prometheus
     access: proxy
     orgId: 1
-    url: http://nginx.gateway.svc.cluster.local.:9090
+    url: http://nginx.gateway.svc.cluster.local.:9090/prometheus
     basicAuth: false
     isDefault: false
     version: 1
