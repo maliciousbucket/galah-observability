@@ -16,9 +16,9 @@ ports:
   - port: 8081:80 # same as `--port '8080:81@loadbalancer'`
     nodeFilters:
       - loadbalancer
-  - port: 8443:443
-    nodeFilters:
-      - loadbalancer
+#  - port: 8443:443
+#    nodeFilters:
+#      - loadbalancer
   - port: 8082:80
     nodeFilters:
       - loadbalancer
