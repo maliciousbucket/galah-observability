@@ -9,3 +9,7 @@ bin/*
 *.dll
 *.so
 *.dylib
+/kubernetes/minio-tenant/configs/.env.minio-user
+*/charts
+charts/
+secure.txt
