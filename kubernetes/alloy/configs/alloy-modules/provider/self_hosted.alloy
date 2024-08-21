@@ -61,6 +61,6 @@ declare "self_hosted_stack" {
 	}
 
 	export "traces_receiver" {
-		value = otelcol.processor.batch.self_hosted.input
+		value = otelcol.exporter.otlp.self_hosted.input
 	}
 }

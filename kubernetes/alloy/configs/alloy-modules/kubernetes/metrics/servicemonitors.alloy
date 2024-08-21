@@ -1,1 +1,51 @@
+declare "servicemonitors_scrape" {
+	argument "forward_to" {
+		optional = false
+	}
 
+	argument "keep_metrics" {
+		optional = true
+	}
+
+	argument "drop_metrics" {
+		optional = true
+	}
+
+	argument "scrape_interval" {
+		optional = true
+	}
+
+	argument "scrape_timeout" {
+		optional = true
+	}
+
+	argument "clustering" {
+		optional = true
+		default  = false
+	}
+
+	prometheus.operator.servicemonitors "scrape" {
+		forward_to = [prometheus.relabel.servicemonitors.receiver]
+
+		scrape {
+			default_scrape_interval = coalesce(argument.scrape_interval.value, "60s")
+			default_scrape_timeout  = coalesce(argument.scrape_timeout.value, "10s")
+		}
+	}
+
+	prometheus.relabel "servicemonitors" {
+		forward_to = argument.forward_to.value
+
+		rule {
+			action        = "drop"
+			source_labels = ["_name_"]
+			regex         = coalesce(argument.drop_metrics.value, "")
+		}
+
+		rule {
+			action        = "keep"
+			source_labels = ["_name_"]
+			regex         = coalesce(argument.keep_metrics.value, "(.+)")
+		}
+	}
+}

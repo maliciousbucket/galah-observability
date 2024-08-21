@@ -1,0 +1,55 @@
+configs:
+  alloy_config_file:
+    file: ../config.alloy
+
+services:
+  alloy:
+    labels:
+      logs.grafana.com/log-format: logfmt
+    image: ${ALLOY_IMAGE:-docker.io/grafana/alloy:v1.3.0}
+    configs:
+      - source: alloy_config_file
+        target: /etc/alloy/config.alloy
+    volumes:
+      - ../alloy-modules:/etc/alloy/modules
+      - ../alloy-modules/kubernetes/collectors/jaeger/jaeger-collector.alloy:/etc/alloy/modules/kubernetes/collectors/jaeger-collector.alloy
+      - ../alloy-modules/kubernetes/collectors/loki/loki-collector.alloy:/etc/alloy/modules/kubernetes/collectors/loki-collector.alloy
+      - ../alloy-modules/kubernetes/collectors/otlp/otlp-collector.alloy:/etc/alloy/modules/kubernetes/collectors/otlp-collector.alloy
+      - ../alloy-modules/kubernetes/collectors/prometheus/prometheus-collector:/etc/alloy/modules/kubernetes/collectors/prometheus-collector.alloy
+      - ../alloy-modules/kubernetes/collectors/zipkin/zipkin-collector:/etc/alloy/modules/kubernetes/collectors/zipkin-collector.alloy
+
+      - ../alloy-modules/kubernetes/integrations/alloy.alloy:/etc/alloy/modules/kubernetes/integrations/alloy.alloy
+      - ../alloy-modules/kubernetes/integrations/discovery.alloy:/etc/alloy/modules/kubernetes/integrations/discovery.alloy
+      - ../alloy-modules/kubernetes/integrations/scrape.alloy:/etc/alloy/modules/kubernetes/integrations/scrape.alloy
+      - ../alloy-modules/kubernetes/integrations/loki.alloy:/etc/alloy/modules/kubernetes/integrations/loki.alloy
+      - ../alloy-modules/kubernetes/integrations/tempo.alloy:/etc/alloy/modules/kubernetes/integrations/tempo.alloy
+      - ../alloy-modules/kubernetes/integrations/mimir.alloy:/etc/alloy/modules/kubernetes/integrations/mimir.alloy
+
+      - ../alloy-modules/kubernetes/metrics/annotations.alloy:/etc/alloy/modules/kubernetes/metrics/annotations.alloy
+      - ../alloy-modules/kubernetes/metrics/integrations-scrape.alloy:/etc/alloy/modules/kubernetes/metrics/integrations-scrape.alloy
+      - ../alloy-modules/kubernetes/metrics/kubernetes-scrape.alloy:/etc/alloy/modules/kubernetes/metrics/kubernetes-scrape.alloy
+      - ../alloy-modules/kubernetes/metrics/podmonitors.alloy:/etc/alloy/modules/kubernetes/metrics/podmonitors.alloy
+      - ../alloy-modules/kubernetes/metrics/servicemonitors.alloy:/etc/alloy/modules/kubernetes/metrics/servicemonitors.alloy
+
+
+
+
+
+
+
+
+
+
+
+    entrypoint:
+      - /bin/alloy
+      - run
+      - /etc/alloy/config.alloy
+      - --server.http.listen-addr=0.0.0.0:12345
+      # - --cluster.enabled=true
+      # - --cluster.join-addresses=alloy-cluster:12345
+      - --disable-reporting=true
+      - --stability.level=experimental
+      - --storage.path=/var/lib/alloy/data
+    ports:
+      - "12345:12345"

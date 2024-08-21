@@ -52,11 +52,11 @@ declare "integrations_mimir" {
 	integrations_discovery "mimir" {
 		namespaces      = argument.namespaces.value
 		field_selectors = argument.field_selectors.value
-		label_selectors = argument.label_selectors.value
+		label_selectors = coalesce(argument.label_selectors.value, ["app.kubernetes.io/name=mimir"])
 		port_name       = argument.port_name.value
 	}
 
-	integrations.scrape "mimir" {
+	integrations_scrape "mimir" {
 		targets         = integrations_discovery.mimir.output
 		forward_to      = argument.forward_to.value
 		job_label       = "integrations/mimir"

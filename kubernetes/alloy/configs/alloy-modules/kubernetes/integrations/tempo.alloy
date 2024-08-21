@@ -52,11 +52,11 @@ declare "integrations_tempo" {
 	integrations_discovery "tempo" {
 		namespaces      = argument.namespaces.value
 		field_selectors = argument.field_selectors.value
-		label_selectors = argument.label_selectors.value
+		label_selectors = coalesce(argument.label_selectors.value, ["app.kubernetes.io/name=tempo"])
 		port_name       = argument.port_name.value
 	}
 
-	integrations.scrape "loki" {
+	integrations_scrape "tempo" {
 		targets         = integrations_discovery.tempo.output
 		forward_to      = argument.forward_to.value
 		job_label       = "integrations/tempo"

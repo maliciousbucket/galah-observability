@@ -23,6 +23,7 @@ configMapGenerator:
     - configs/alloy-modules/kubernetes/metrics/annotations.alloy
     - configs/alloy-modules/kubernetes/metrics/podmonitors.alloy
     - configs/alloy-modules/kubernetes/metrics/servicemonitors.alloy
+    - configs/alloy-modules/kubernetes/metrics/integrations-scrape.alloy
 
 
   - name: alloy-modules-kubernetes-logs

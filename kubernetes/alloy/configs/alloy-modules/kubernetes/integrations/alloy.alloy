@@ -27,10 +27,19 @@ declare "integrations_alloy" {
 		default  = "10s"
 	}
 
+	argument "max_cache_size" {
+		optional = true
+	}
+
+	argument "clustering" {
+		optional = true
+		default  = false
+	}
+
 	prometheus.exporter.self "integrations_alloy" { }
 
 	discovery.relabel "integrations_alloy" {
-		targets = prometheus.exporter.unix.integrations_alloy.targets
+		targets = prometheus.exporter.self.integrations_alloy.targets
 
 		rule {
 			target_label = "job"
@@ -53,8 +62,8 @@ declare "integrations_alloy" {
 
 		scrape_classic_histograms = true
 
-		scrape_interval = argument.scrape_interval.value
-		scrape_timeout  = argument.scrape_timeout.value
+		scrape_interval = coalesce(argument.scrape_interval.value, "60s")
+		scrape_timeout  = coalesce(argument.scrape_timeout.value, "10s")
 
 		clustering {
 			enabled = coalesce(argument.clustering.value, false)

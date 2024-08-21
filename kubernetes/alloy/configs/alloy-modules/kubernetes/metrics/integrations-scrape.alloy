@@ -1,0 +1,207 @@
+declare "integrations_scrape" {
+	argument "forward_to" {
+		optional = false
+	}
+
+	/*
+	    ALLOY
+	*/
+
+	argument "keep_metrics_alloy" {
+		optional = true
+		default  = "(prometheus_target_sync_length_seconds_sum|prometheus_target_scrapes_.*|prometheus_target_interval.*|prometheus_sd_discovered_targets|alloy_build.*|prometheus_remote_write_wal_samples_appended_total|process_start_time_seconds)"
+	}
+
+	argument "drop_metrics_alloy" {
+		optional = true
+	}
+
+	argument "scrape_interval_alloy" {
+		optional = true
+	}
+
+	/*
+        LOKI
+    */
+
+	argument "namespaces_loki" {
+		optional = true
+	}
+
+	argument "field_selectors_loki" {
+		optional = true
+	}
+
+	argument "label_selectors_loki" {
+		optional = true
+	}
+
+	argument "port_name_loki" {
+		optional = true
+	}
+
+	argument "keep_metrics_loki" {
+		optional = true
+	}
+
+	argument "drop_metrics_loki" {
+		optional = true
+	}
+
+	argument "scrape_interval_loki" {
+		optional = true
+	}
+
+	argument "scrape_timeout_loki" {
+		optional = true
+	}
+
+	argument "max_cache_size_loki" {
+		optional = true
+	}
+
+	argument "clustering_loki" {
+		optional = true
+	}
+
+	/*
+	    TEMPO
+	*/
+
+	argument "namespaces_tempo" {
+		optional = true
+	}
+
+	argument "field_selectors_tempo" {
+		optional = true
+	}
+
+	argument "label_selectors_tempo" {
+		optional = true
+	}
+
+	argument "port_name_tempo" {
+		optional = true
+	}
+
+	argument "keep_metrics_tempo" {
+		optional = true
+	}
+
+	argument "drop_metrics_tempo" {
+		optional = true
+	}
+
+	argument "scrape_interval_tempo" {
+		optional = true
+	}
+
+	argument "scrape_timeout_tempo" {
+		optional = true
+	}
+
+	argument "max_cache_size_tempo" {
+		optional = true
+	}
+
+	argument "clustering_tempo" {
+		optional = true
+	}
+
+	/*
+	    MIMIR
+	*/
+
+	argument "namespaces_mimir" {
+		optional = true
+	}
+
+	argument "field_selectors_mimir" {
+		optional = true
+	}
+
+	argument "label_selectors_mimir" {
+		optional = true
+	}
+
+	argument "port_name_mimir" {
+		optional = true
+	}
+
+	argument "keep_metrics_mimir" {
+		optional = true
+	}
+
+	argument "drop_metrics_mimir" {
+		optional = true
+	}
+
+	argument "scrape_interval_mimir" {
+		optional = true
+	}
+
+	argument "scrape_timeout_mimir" {
+		optional = true
+	}
+
+	argument "max_cache_size_mimir" {
+		optional = true
+	}
+
+	argument "clustering_mimir" {
+		optional = true
+	}
+
+	import.file "integrations" {
+		filename = "/etc/alloy/modules/kubernetes/integrations"
+	}
+
+	integrations.integrations_alloy "alloy" {
+		forward_to      = argument.forward_to.value
+		keep_metrics    = argument.keep_metrics_alloy.value
+		drop_metrics    = argument.drop_metrics_alloy.value
+		scrape_interval = argument.scrape_interval_alloy.value
+	}
+
+	integrations.integrations_loki "loki" {
+		forward_to      = argument.forward_to.value
+		namespaces      = argument.namespaces_loki.value
+		field_selectors = argument.field_selectors_loki.value
+		label_selectors = argument.label_selectors_loki.value
+		port_name       = argument.port_name_loki.value
+		keep_metrics    = argument.keep_metrics_loki.value
+		drop_metrics    = argument.drop_metrics_loki.value
+		scrape_interval = argument.scrape_interval_loki.value
+		scrape_timeout  = argument.scrape_timeout_loki.value
+		max_cache_size  = argument.max_cache_size_loki.value
+		clustering      = argument.clustering_loki.value
+	}
+
+	integrations.integrations_tempo "tempo" {
+		forward_to      = argument.forward_to.value
+		namespaces      = argument.namespaces_tempo.value
+		field_selectors = argument.field_selectors_tempo.value
+		label_selectors = argument.label_selectors_tempo.value
+		port_name       = argument.port_name_tempo.value
+		keep_metrics    = argument.keep_metrics_tempo.value
+		drop_metrics    = argument.drop_metrics_tempo.value
+		scrape_interval = argument.scrape_interval_tempo.value
+		scrape_timeout  = argument.scrape_timeout_tempo.value
+		max_cache_size  = argument.max_cache_size_tempo.value
+		clustering      = argument.clustering_tempo.value
+	}
+
+	integrations.integrations_mimir "mimir" {
+		forward_to      = argument.forward_to.value
+		namespaces      = argument.namespaces_mimir.value
+		field_selectors = argument.field_selectors_mimir.value
+		label_selectors = argument.label_selectors_mimir.value
+		port_name       = argument.port_name_mimir.value
+		keep_metrics    = argument.keep_metrics_mimir.value
+		drop_metrics    = argument.drop_metrics_mimir.value
+		scrape_interval = argument.scrape_interval_mimir.value
+		scrape_timeout  = argument.scrape_timeout_mimir.value
+		max_cache_size  = argument.max_cache_size_mimir.value
+		clustering      = argument.clustering_mimir.value
+	}
+}

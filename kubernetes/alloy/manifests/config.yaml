@@ -139,10 +139,18 @@ subjects:
 ---
 apiVersion: v1
 data:
-  config.alloy: "logging {\n\tlevel  = \"info\"\n\tformat = \"logfmt\"\n}\n"
+  config.alloy: "logging {\n\tlevel  = \"info\"\n\tformat = \"logfmt\"\n\twrite_to
+    = [provider.self_hosted_stack.kubernetes.logs_receiver]\n}\n\nlivedebugging {\n
+    \ enabled = true\n}\n\nimport.file \"provider\" {\n    filename = \"/etc/alloy/modules/provider\"\n}\n\notelcol.exporter.debug
+    \"default\" {}\n\nprovider.self_hosted_stack \"kubernetes\" {\n    metrics_endpoint
+    = coalesce(env(\"METRICS_ENDPOINT\"), \"http://nginx.gateway.svc:9090/api/v1/push\")\n
+    \   logs_endpoint = coalesce(env(\"LOGS_ENDPOINT\"), \"http://nginx.gateway.svc.cluster.local:3100/loki/api/v1/push\")\n
+    \   traces_endpoint = coalesce(env(\"TRACES_ENDPOINT\"), \"http://nginx.gateway.svc.cluster.local:3205\")\n}\n\nimport.file
+    \"metrics\" {\n    filename = \"/etc/alloy/modules/kubernetes/metrics\"\n}\n\nmetrics.integrations_scrape
+    \"kubernetes\" {\n    forward_to = [provider.self_hosted_stack.kubernetes.metrics_receiver]\n}\n"
 kind: ConfigMap
 metadata:
-  name: alloy-config-d7hm5d4th4
+  name: alloy-config-h7kc7h9h6b
   namespace: galah-monitoring
 ---
 apiVersion: v1
@@ -153,16 +161,18 @@ data:
     metrics etc.\n\t\tdefault = \"(prometheus_target_sync_length_seconds_sum|prometheus_target_scrapes_.*|prometheus_target_interval.*|prometheus_sd_discovered_targets|alloy_build.*|prometheus_remote_write_wal_samples_appended_total|process_start_time_seconds)\"\n\t}\n\n\targument
     \"drop_metrics\" {\n\t\toptional = true\n\t}\n\n\targument \"scrape_interval\"
     {\n\t\toptional = true\n\t\tdefault  = \"60s\"\n\t}\n\n\targument \"scrape_timeout\"
-    {\n\t\toptional = true\n\t\tdefault  = \"10s\"\n\t}\n\n\tprometheus.exporter.self
-    \"integrations_alloy\" { }\n\n\tdiscovery.relabel \"integrations_alloy\" {\n\t\ttargets
-    = prometheus.exporter.unix.integrations_alloy.targets\n\n\t\trule {\n\t\t\ttarget_label
-    = \"job\"\n\t\t\treplacement  = \"integrations/alloy\"\n\t\t}\n\n\t\trule {\n\t\t\ttarget_label
-    = \"instance\"\n\t\t\treplacement  = coalesce(argument.instance_name.value, constants.hostname)\n\t\t}\n\n\t\trule
-    {\n\t\t\ttarget_label = \"alloy_hostname\"\n\t\t\treplacement  = constants.hostname\n\t\t}\n\t}\n\n\tprometheus.scrape
-    \"alloy\" {\n\t\ttargets = discovery.relabel.integrations_alloy.output\n\n\t\tscrape_classic_histograms
-    = true\n\n\t\tscrape_interval = argument.scrape_interval.value\n\t\tscrape_timeout
-    \ = argument.scrape_timeout.value\n\n\t\tclustering {\n\t\t\tenabled = coalesce(argument.clustering.value,
-    false)\n\t\t}\n\n\t\tforward_to = [prometheus.relabel.integrations_alloy.receiver]\n\t}\n\n\tprometheus.relabel
+    {\n\t\toptional = true\n\t\tdefault  = \"10s\"\n\t}\n\n\targument \"max_cache_size\"
+    {\n\t\toptional = true\n\t}\n\n\targument \"clustering\" {\n\t\toptional = true\n\t\tdefault
+    \ = false\n\t}\n\n\tprometheus.exporter.self \"integrations_alloy\" { }\n\n\tdiscovery.relabel
+    \"integrations_alloy\" {\n\t\ttargets = prometheus.exporter.self.integrations_alloy.targets\n\n\t\trule
+    {\n\t\t\ttarget_label = \"job\"\n\t\t\treplacement  = \"integrations/alloy\"\n\t\t}\n\n\t\trule
+    {\n\t\t\ttarget_label = \"instance\"\n\t\t\treplacement  = coalesce(argument.instance_name.value,
+    constants.hostname)\n\t\t}\n\n\t\trule {\n\t\t\ttarget_label = \"alloy_hostname\"\n\t\t\treplacement
+    \ = constants.hostname\n\t\t}\n\t}\n\n\tprometheus.scrape \"alloy\" {\n\t\ttargets
+    = discovery.relabel.integrations_alloy.output\n\n\t\tscrape_classic_histograms
+    = true\n\n\t\tscrape_interval = coalesce(argument.scrape_interval.value, \"60s\")\n\t\tscrape_timeout
+    \ = coalesce(argument.scrape_timeout.value, \"10s\")\n\n\t\tclustering {\n\t\t\tenabled
+    = coalesce(argument.clustering.value, false)\n\t\t}\n\n\t\tforward_to = [prometheus.relabel.integrations_alloy.receiver]\n\t}\n\n\tprometheus.relabel
     \"integrations_alloy\" {\n\t\tforward_to     = argument.forward_to.value\n\t\tmax_cache_size
     = coalesce(argument.max_cache_size.value, 100000)\n\n\t\t// drop metrics that
     match the drop_metrics regex\n\t\trule {\n\t\t\tsource_labels = [\"__name__\"]\n\t\t\tregex
@@ -219,13 +229,13 @@ data:
     = true\n\t}\n\n\targument \"scrape_timeout\" {\n\t\toptional = true\n\t}\n\n\targument
     \"max_cache_size\" {\n\t\toptional = true\n\t}\n\n\targument \"clustering\" {\n\t\toptional
     = true\n\t}\n\n\tintegrations_discovery \"loki\" {\n\t\tnamespaces      = argument.namespaces.value\n\t\tfield_selectors
-    = argument.field_selectors.value\n\t\tlabel_selectors = argument.label_selectors.value\n\t\tport_name
-    \      = argument.port_name.value\n\t}\n\n\tintegrations.scrape \"loki\" {\n\t\ttargets
-    \        = integrations_discovery.loki.output\n\t\tforward_to      = argument.forward_to.value\n\t\tjob_label
-    \      = \"integrations/loki\"\n\t\tkeep_metrics    = argument.keep_metrics.value\n\t\tdrop_metrics
-    \   = argument.drop_metrics.value\n\t\tscrape_interval = argument.scrape_interval.value\n\t\tscrape_timeout
-    \ = argument.scrape_timeout.value\n\t\tmax_cache_size  = argument.max_cache_size.value\n\t\tclustering
-    \     = argument.clustering.value\n\t}\n}\n"
+    = argument.field_selectors.value\n\t\tlabel_selectors = coalesce(argument.label_selectors.value,
+    [\"app.kubernetes.io/name=loki\"])\n\t\tport_name       = argument.port_name.value\n\t}\n\n\tintegrations_scrape
+    \"loki\" {\n\t\ttargets         = integrations_discovery.loki.output\n\t\tforward_to
+    \     = argument.forward_to.value\n\t\tjob_label       = \"integrations/loki\"\n\t\tkeep_metrics
+    \   = argument.keep_metrics.value\n\t\tdrop_metrics    = argument.drop_metrics.value\n\t\tscrape_interval
+    = argument.scrape_interval.value\n\t\tscrape_timeout  = argument.scrape_timeout.value\n\t\tmax_cache_size
+    \ = argument.max_cache_size.value\n\t\tclustering      = argument.clustering.value\n\t}\n}\n"
   mimir.alloy: "declare \"integrations_mimir\" {\n\targument \"forward_to\" {\n\t\toptional
     = true\n\t}\n\n\t//Discovery Args\n\n\targument \"namespaces\" {\n\t\toptional
     = true\n\t\tdefault  = []\n\t}\n\n\targument \"field_selectors\" {\n\t\toptional
@@ -237,13 +247,13 @@ data:
     = true\n\t}\n\n\targument \"scrape_timeout\" {\n\t\toptional = true\n\t}\n\n\targument
     \"max_cache_size\" {\n\t\toptional = true\n\t}\n\n\targument \"clustering\" {\n\t\toptional
     = true\n\t}\n\n\tintegrations_discovery \"mimir\" {\n\t\tnamespaces      = argument.namespaces.value\n\t\tfield_selectors
-    = argument.field_selectors.value\n\t\tlabel_selectors = argument.label_selectors.value\n\t\tport_name
-    \      = argument.port_name.value\n\t}\n\n\tintegrations.scrape \"mimir\" {\n\t\ttargets
-    \        = integrations_discovery.mimir.output\n\t\tforward_to      = argument.forward_to.value\n\t\tjob_label
-    \      = \"integrations/mimir\"\n\t\tkeep_metrics    = argument.keep_metrics.value\n\t\tdrop_metrics
-    \   = argument.drop_metrics.value\n\t\tscrape_interval = argument.scrape_interval.value\n\t\tscrape_timeout
-    \ = argument.scrape_timeout.value\n\t\tmax_cache_size  = argument.max_cache_size.value\n\t\tclustering
-    \     = argument.clustering.value\n\t}\n}\n"
+    = argument.field_selectors.value\n\t\tlabel_selectors = coalesce(argument.label_selectors.value,
+    [\"app.kubernetes.io/name=mimir\"])\n\t\tport_name       = argument.port_name.value\n\t}\n\n\tintegrations_scrape
+    \"mimir\" {\n\t\ttargets         = integrations_discovery.mimir.output\n\t\tforward_to
+    \     = argument.forward_to.value\n\t\tjob_label       = \"integrations/mimir\"\n\t\tkeep_metrics
+    \   = argument.keep_metrics.value\n\t\tdrop_metrics    = argument.drop_metrics.value\n\t\tscrape_interval
+    = argument.scrape_interval.value\n\t\tscrape_timeout  = argument.scrape_timeout.value\n\t\tmax_cache_size
+    \ = argument.max_cache_size.value\n\t\tclustering      = argument.clustering.value\n\t}\n}\n"
   scrape.alloy: "declare \"integrations_scrape\" {\n\targument \"targets\" {\n\t\tcomment
     = \"Must be a list() of targets\"\n\t}\n\n\targument \"forward_to\" {\n\t\tcomment
     = \"Must be a list(MetricsReceiver) where collected logs should be forwarded to\"\n\t}\n\n\targument
@@ -288,16 +298,16 @@ data:
     = true\n\t}\n\n\targument \"scrape_timeout\" {\n\t\toptional = true\n\t}\n\n\targument
     \"max_cache_size\" {\n\t\toptional = true\n\t}\n\n\targument \"clustering\" {\n\t\toptional
     = true\n\t}\n\n\tintegrations_discovery \"tempo\" {\n\t\tnamespaces      = argument.namespaces.value\n\t\tfield_selectors
-    = argument.field_selectors.value\n\t\tlabel_selectors = argument.label_selectors.value\n\t\tport_name
-    \      = argument.port_name.value\n\t}\n\n\tintegrations.scrape \"loki\" {\n\t\ttargets
-    \        = integrations_discovery.tempo.output\n\t\tforward_to      = argument.forward_to.value\n\t\tjob_label
-    \      = \"integrations/tempo\"\n\t\tkeep_metrics    = argument.keep_metrics.value\n\t\tdrop_metrics
-    \   = argument.drop_metrics.value\n\t\tscrape_interval = argument.scrape_interval.value\n\t\tscrape_timeout
-    \ = argument.scrape_timeout.value\n\t\tmax_cache_size  = argument.max_cache_size.value\n\t\tclustering
-    \     = argument.clustering.value\n\t}\n}\n"
+    = argument.field_selectors.value\n\t\tlabel_selectors = coalesce(argument.label_selectors.value,
+    [\"app.kubernetes.io/name=tempo\"])\n\t\tport_name       = argument.port_name.value\n\t}\n\n\tintegrations_scrape
+    \"tempo\" {\n\t\ttargets         = integrations_discovery.tempo.output\n\t\tforward_to
+    \     = argument.forward_to.value\n\t\tjob_label       = \"integrations/tempo\"\n\t\tkeep_metrics
+    \   = argument.keep_metrics.value\n\t\tdrop_metrics    = argument.drop_metrics.value\n\t\tscrape_interval
+    = argument.scrape_interval.value\n\t\tscrape_timeout  = argument.scrape_timeout.value\n\t\tmax_cache_size
+    \ = argument.max_cache_size.value\n\t\tclustering      = argument.clustering.value\n\t}\n}\n"
 kind: ConfigMap
 metadata:
-  name: alloy-modules-integrations-fb8t7gth29
+  name: alloy-modules-integrations-g8bf4k6fhh
   namespace: galah-monitoring
 ---
 apiVersion: v1
@@ -1021,13 +1031,75 @@ data:
     \"(.+)\")\n\t\t}\n\n\t\t// drop metrics that match the drop_metrics regex\n\t\trule
     {\n\t\t\taction        = \"drop\"\n\t\t\tsource_labels = [\"__name__\"]\n\t\t\tregex
     \        = coalesce(argument.drop_metrics.value, \"\")\n\t\t}\n\t}\n}\n"
+  integrations-scrape.alloy: "declare \"integrations_scrape\" {\n\targument \"forward_to\"
+    {\n\t\toptional = false\n\t}\n\n\t/*\n\t    ALLOY\n\t*/\n\n\targument \"keep_metrics_alloy\"
+    {\n\t\toptional = true\n\t\tdefault  = \"(prometheus_target_sync_length_seconds_sum|prometheus_target_scrapes_.*|prometheus_target_interval.*|prometheus_sd_discovered_targets|alloy_build.*|prometheus_remote_write_wal_samples_appended_total|process_start_time_seconds)\"\n\t}\n\n\targument
+    \"drop_metrics_alloy\" {\n\t\toptional = true\n\t}\n\n\targument \"scrape_interval_alloy\"
+    {\n\t\toptional = true\n\t}\n\n\t/*\n        LOKI\n    */\n\n\targument \"namespaces_loki\"
+    {\n\t\toptional = true\n\t}\n\n\targument \"field_selectors_loki\" {\n\t\toptional
+    = true\n\t}\n\n\targument \"label_selectors_loki\" {\n\t\toptional = true\n\t}\n\n\targument
+    \"port_name_loki\" {\n\t\toptional = true\n\t}\n\n\targument \"keep_metrics_loki\"
+    {\n\t\toptional = true\n\t}\n\n\targument \"drop_metrics_loki\" {\n\t\toptional
+    = true\n\t}\n\n\targument \"scrape_interval_loki\" {\n\t\toptional = true\n\t}\n\n\targument
+    \"scrape_timeout_loki\" {\n\t\toptional = true\n\t}\n\n\targument \"max_cache_size_loki\"
+    {\n\t\toptional = true\n\t}\n\n\targument \"clustering_loki\" {\n\t\toptional
+    = true\n\t}\n\n\t/*\n\t    TEMPO\n\t*/\n\n\targument \"namespaces_tempo\" {\n\t\toptional
+    = true\n\t}\n\n\targument \"field_selectors_tempo\" {\n\t\toptional = true\n\t}\n\n\targument
+    \"label_selectors_tempo\" {\n\t\toptional = true\n\t}\n\n\targument \"port_name_tempo\"
+    {\n\t\toptional = true\n\t}\n\n\targument \"keep_metrics_tempo\" {\n\t\toptional
+    = true\n\t}\n\n\targument \"drop_metrics_tempo\" {\n\t\toptional = true\n\t}\n\n\targument
+    \"scrape_interval_tempo\" {\n\t\toptional = true\n\t}\n\n\targument \"scrape_timeout_tempo\"
+    {\n\t\toptional = true\n\t}\n\n\targument \"max_cache_size_tempo\" {\n\t\toptional
+    = true\n\t}\n\n\targument \"clustering_tempo\" {\n\t\toptional = true\n\t}\n\n\t/*\n\t
+    \   MIMIR\n\t*/\n\n\targument \"namespaces_mimir\" {\n\t\toptional = true\n\t}\n\n\targument
+    \"field_selectors_mimir\" {\n\t\toptional = true\n\t}\n\n\targument \"label_selectors_mimir\"
+    {\n\t\toptional = true\n\t}\n\n\targument \"port_name_mimir\" {\n\t\toptional
+    = true\n\t}\n\n\targument \"keep_metrics_mimir\" {\n\t\toptional = true\n\t}\n\n\targument
+    \"drop_metrics_mimir\" {\n\t\toptional = true\n\t}\n\n\targument \"scrape_interval_mimir\"
+    {\n\t\toptional = true\n\t}\n\n\targument \"scrape_timeout_mimir\" {\n\t\toptional
+    = true\n\t}\n\n\targument \"max_cache_size_mimir\" {\n\t\toptional = true\n\t}\n\n\targument
+    \"clustering_mimir\" {\n\t\toptional = true\n\t}\n\n\timport.file \"integrations\"
+    {\n\t\tfilename = \"/etc/alloy/modules/kubernetes/integrations\"\n\t}\n\n\tintegrations.integrations_alloy
+    \"alloy\" {\n\t\tforward_to      = argument.forward_to.value\n\t\tkeep_metrics
+    \   = argument.keep_metrics_alloy.value\n\t\tdrop_metrics    = argument.drop_metrics_alloy.value\n\t\tscrape_interval
+    = argument.scrape_interval_alloy.value\n\t}\n\n\tintegrations.integrations_loki
+    \"loki\" {\n\t\tforward_to      = argument.forward_to.value\n\t\tnamespaces      =
+    argument.namespaces_loki.value\n\t\tfield_selectors = argument.field_selectors_loki.value\n\t\tlabel_selectors
+    = argument.label_selectors_loki.value\n\t\tport_name       = argument.port_name_loki.value\n\t\tkeep_metrics
+    \   = argument.keep_metrics_loki.value\n\t\tdrop_metrics    = argument.drop_metrics_loki.value\n\t\tscrape_interval
+    = argument.scrape_interval_loki.value\n\t\tscrape_timeout  = argument.scrape_timeout_loki.value\n\t\tmax_cache_size
+    \ = argument.max_cache_size_loki.value\n\t\tclustering      = argument.clustering_loki.value\n\t}\n\n\tintegrations.integrations_tempo
+    \"tempo\" {\n\t\tforward_to      = argument.forward_to.value\n\t\tnamespaces      =
+    argument.namespaces_tempo.value\n\t\tfield_selectors = argument.field_selectors_tempo.value\n\t\tlabel_selectors
+    = argument.label_selectors_tempo.value\n\t\tport_name       = argument.port_name_tempo.value\n\t\tkeep_metrics
+    \   = argument.keep_metrics_tempo.value\n\t\tdrop_metrics    = argument.drop_metrics_tempo.value\n\t\tscrape_interval
+    = argument.scrape_interval_tempo.value\n\t\tscrape_timeout  = argument.scrape_timeout_tempo.value\n\t\tmax_cache_size
+    \ = argument.max_cache_size_tempo.value\n\t\tclustering      = argument.clustering_tempo.value\n\t}\n\n\tintegrations.integrations_mimir
+    \"mimir\" {\n\t\tforward_to      = argument.forward_to.value\n\t\tnamespaces      =
+    argument.namespaces_mimir.value\n\t\tfield_selectors = argument.field_selectors_mimir.value\n\t\tlabel_selectors
+    = argument.label_selectors_mimir.value\n\t\tport_name       = argument.port_name_mimir.value\n\t\tkeep_metrics
+    \   = argument.keep_metrics_mimir.value\n\t\tdrop_metrics    = argument.drop_metrics_mimir.value\n\t\tscrape_interval
+    = argument.scrape_interval_mimir.value\n\t\tscrape_timeout  = argument.scrape_timeout_mimir.value\n\t\tmax_cache_size
+    \ = argument.max_cache_size_mimir.value\n\t\tclustering      = argument.clustering_mimir.value\n\t}\n}\n"
   podmonitors.alloy: |2+
 
-  servicemonitors.alloy: |2+
-
+  servicemonitors.alloy: "declare \"servicemonitors_scrape\" {\n\targument \"forward_to\"
+    {\n\t\toptional = false\n\t}\n\n\targument \"keep_metrics\" {\n\t\toptional =
+    true\n\t}\n\n\targument \"drop_metrics\" {\n\t\toptional = true\n\t}\n\n\targument
+    \"scrape_interval\" {\n\t\toptional = true\n\t}\n\n\targument \"scrape_timeout\"
+    {\n\t\toptional = true\n\t}\n\n\targument \"clustering\" {\n\t\toptional = true\n\t\tdefault
+    \ = false\n\t}\n\n\tprometheus.operator.servicemonitors \"scrape\" {\n\t\tforward_to
+    = [prometheus.relabel.servicemonitors.receiver]\n\n\t\tscrape {\n\t\t\tdefault_scrape_interval
+    = coalesce(argument.scrape_interval.value, \"60s\")\n\t\t\tdefault_scrape_timeout
+    \ = coalesce(argument.scrape_timeout.value, \"10s\")\n\t\t}\n\t}\n\n\tprometheus.relabel
+    \"servicemonitors\" {\n\t\tforward_to = argument.forward_to.value\n\n\t\trule
+    {\n\t\t\taction        = \"drop\"\n\t\t\tsource_labels = [\"_name_\"]\n\t\t\tregex
+    \        = coalesce(argument.drop_metrics.value, \"\")\n\t\t}\n\n\t\trule {\n\t\t\taction
+    \       = \"keep\"\n\t\t\tsource_labels = [\"_name_\"]\n\t\t\tregex         =
+    coalesce(argument.keep_metrics.value, \"(.+)\")\n\t\t}\n\t}\n}\n"
 kind: ConfigMap
 metadata:
-  name: alloy-modules-kubernetes-metrics-866mffc986
+  name: alloy-modules-kubernetes-metrics-2c8kg5bffh
   namespace: galah-monitoring
 ---
 apiVersion: v1
@@ -1051,10 +1123,10 @@ data:
     {\n\t\t\t\tinsecure             = true\n\t\t\t\tinsecure_skip_verify = true\n\t\t\t}\n\t\t}\n\t}\n\n\texport
     \"metrics_receiver\" {\n\t\tvalue = prometheus.remote_write.self_hosted.receiver\n\t}\n\n\texport
     \"logs_receiver\" {\n\t\tvalue = loki.write.self_hosted.receiver\n\t}\n\n\texport
-    \"traces_receiver\" {\n\t\tvalue = otelcol.processor.batch.self_hosted.input\n\t}\n}\n"
+    \"traces_receiver\" {\n\t\tvalue = otelcol.exporter.otlp.self_hosted.input\n\t}\n}\n"
 kind: ConfigMap
 metadata:
-  name: alloy-modules-kubernetes-provider-4h9hhhm5gh
+  name: alloy-modules-kubernetes-provider-bhb9bm922h
   namespace: galah-monitoring
 ---
 apiVersion: v1
@@ -1322,10 +1394,10 @@ spec:
       serviceAccountName: alloy
       volumes:
       - configMap:
-          name: alloy-config-d7hm5d4th4
+          name: alloy-config-h7kc7h9h6b
         name: config
       - configMap:
-          name: alloy-modules-kubernetes-metrics-866mffc986
+          name: alloy-modules-kubernetes-metrics-2c8kg5bffh
         name: modules-kubernetes-metrics
       - configMap:
           name: alloy-modules-kubernetes-logs-b8k9846tf9
@@ -1337,7 +1409,7 @@ spec:
           name: alloy-modules-kubernetes-jobs-6ct58987ht
         name: modules-kubernetes-jobs
       - configMap:
-          name: alloy-modules-integrations-fb8t7gth29
+          name: alloy-modules-integrations-g8bf4k6fhh
         name: modules-integrations
       - configMap:
           name: alloy-modules-integrations-kubernetes-kf762t8df8
@@ -1346,7 +1418,7 @@ spec:
           name: alloy-modules-kubernetes-collectors-bk77mt958c
         name: modules-kubernetes-collectors
       - configMap:
-          name: alloy-modules-kubernetes-provider-4h9hhhm5gh
+          name: alloy-modules-kubernetes-provider-bhb9bm922h
         name: modules-kubernetes-provider
 ---
 apiVersion: monitoring.coreos.com/v1
