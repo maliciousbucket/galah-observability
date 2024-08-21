@@ -1,0 +1,117 @@
+declare "receive_otlp_telemetry" {
+	argument "metrics_forward_to" {
+		optional = false
+	}
+
+	argument "logs_forward_to" {
+		optional = false
+	}
+
+	argument "traces_forward_to" {
+		optional = false
+	}
+
+	//OTLP
+
+	argument "otlp_grpc_endpoint" {
+		optional = true
+	}
+
+	argument "otlp_grpc_transport" {
+		optional = true
+	}
+
+	argument "otlp_http_endpoint" {
+		optional = true
+	}
+
+	argument "otlp_metrics_path" {
+		optional = true
+	}
+
+	argument "otlp_logs_path" {
+		optional = true
+	}
+
+	argument "otlp_traces_path" {
+		optional = true
+	}
+
+	//JAEGER
+
+	argument "jaeger_grpc_endpoint" {
+		optional = true
+	}
+
+	argument "jaeger_grpc_transport" {
+		optional = true
+	}
+
+	argument "jaeger_thrift_http_endpoint" {
+		optional = true
+	}
+
+	argument "jaeger_thrift_binary_endpoint" {
+		optional = true
+	}
+
+	argument "jaeger_thrift_compact_endpoint" {
+		optional = true
+	}
+
+	//ZIPKIN
+
+	argument "zipkin_endpoint" {
+		optional = true
+	}
+
+	otelcol.processor.batch "default" {
+		output {
+			metrics = argument.metrics_forward_to.value
+			logs    = argument.logs_forward_to.value
+			traces  = argument.traces_forward_to.value
+		}
+	}
+
+	otelcol.processor.memory_limiter "default" {
+		check_interval         = "1s"
+		limit_percentage       = 50
+		spike_limit_percentage = 25
+
+		output {
+			metrics = [otelcol.processor.batch.default.input]
+			logs    = [otelcol.processor.batch.default.input]
+			traces  = [otelcol.processor.batch.default.input]
+		}
+	}
+
+	import.files "collectors" {
+		filename = "/etc/alloy/modules/kubernetes/collectors"
+	}
+
+	collectors.otlp_collector "otlp" {
+		metrics_forward_to = [otelcol.processor.memory_limiter.default.input]
+		logs_forward_to    = [otelcol.processor.memory_limiter.default.input]
+		traces_forward_to  = [otelcol.processor.memory_limiter.default.input]
+		grpc_endpoint      = argument.otlp_grpc_endpoint.value
+		grpc_transport     = argument.otlp_grpc_transport.value
+		http_endpoint      = argument.otlp_http_endpoint.value
+		metrics_url_path   = argument.otlp_metrics_path.value
+		logs_url_path      = argument.otlp_logs_path.value
+		traces_url_path    = argument.otlp_traces_path.value
+	}
+
+	collectors.jaeger_collector "jaeger" {
+		forward_to              = [otelcol.processor.memory_limiter.default.input]
+		grpc_endpoint           = argument.jaeger_grpc_endpoint.value
+		grpc_protocol           = argument.jaeger_grpc_protocol.value
+		thrift_http_endpoint    = argument.jaeger_thrift_http_endpoint.value
+		thrift_binary_endpoint  = argument.jaeger_thrift_binary_endpoint.value
+		thrift_compact_endpoint = argument.jaeger_thrift_compact_endpoint.value
+	}
+
+	collectors.zipkin_collector "zipkin" {
+		forward_to = [otelcol.processor.memory_limiter.default.input]
+		endpoint   = argument.zipkin_endpoint.value
+	}
+}

@@ -76,7 +76,7 @@ declare "integrations_scrape" {
 			regex         = coalesce(argument.keep_metrics.value, "(.+)")
 			action        = "keep"
 		}
-
+		/*
 		// set the job label to be namespace/pod as this is what the cloud integration expects
 		rule {
 			action        = "replace"
@@ -89,5 +89,6 @@ declare "integrations_scrape" {
 			replacement  = "$1/$2"
 			target_label = "job"
 		}
+		*/
 	}
 }

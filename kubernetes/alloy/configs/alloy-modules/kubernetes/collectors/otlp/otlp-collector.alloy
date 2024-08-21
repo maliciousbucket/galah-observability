@@ -47,14 +47,14 @@ declare "otlp_collector" {
 	otelcol.receiver.otlp "otlp_collector" {
 		grpc {
 			endpoint  = coalesce(argument.grpc_endpoint.value, "0.0.0.0:4317")
-			transport = argument.transport.value
+			transport = coalesce(argument.transport.value, "tcp")
 		}
 
 		http {
 			endpoint         = coalesce(argument.http_endpoint.value, "0.0.0.0:4318")
-			metrics_url_path = argument.metrics_url_path.value
-			logs_url_path    = argument.logs_url_path.value
-			traces_url_path  = argument.traces_url_path.value
+			metrics_url_path = coalesce(argument.metrics_url_path.value, "/v1/metrics")
+			logs_url_path    = coalesce(argument.logs_url_path.value, "/v1/logs")
+			traces_url_path  = coalesce(argument.traces_url_path.value, "/v1/traces")
 		}
 
 		output {
@@ -63,6 +63,8 @@ declare "otlp_collector" {
 			traces  = argument.traces_forward_to.value
 		}
 
-		debug_metrics { }
+		debug_metrics {
+			disable_high_cardinality_metrics = true
+		}
 	}
 }
