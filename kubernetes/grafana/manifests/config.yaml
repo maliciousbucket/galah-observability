@@ -4,6 +4,77 @@ metadata:
   name: galah-monitoring
 ---
 apiVersion: v1
+automountServiceAccountToken: false
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/instance: grafana
+    app.kubernetes.io/name: grafana
+  name: grafana
+  namespace: galah-monitoring
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    app.kubernetes.io/instance: grafana
+    app.kubernetes.io/name: grafana
+  name: grafana
+  namespace: galah-monitoring
+rules: []
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/instance: grafana
+    app.kubernetes.io/name: grafana
+  name: grafana-clusterrole
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  - secrets
+  verbs:
+  - get
+  - watch
+  - list
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/instance: grafana
+    app.kubernetes.io/name: grafana
+  name: grafana
+  namespace: galah-monitoring
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: grafana
+subjects:
+- kind: ServiceAccount
+  name: grafana
+  namespace: galah-monitoring
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/instance: grafana
+    app.kubernetes.io/name: grafana
+  name: grafana-clusterrolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: grafana-clusterrole
+subjects:
+- kind: ServiceAccount
+  name: grafana
+  namespace: galah-monitoring
+---
+apiVersion: v1
 data:
   custom.ini: |-
     [analytics]
@@ -2101,10 +2172,9 @@ data:
       - name: Loki
         type: loki
         access: proxy
-    #    orgId: 1
+        orgId: 1
         uid: loki
-    #    url: http://loki:3100
-        url: http://host.docker.internal:3100
+        url: http://nginx.gateway.svc.cluster.local.:3100
         basicAuth: false
         isDefault: false
         version: 1
@@ -2115,7 +2185,7 @@ data:
         access: proxy
     #    orgId: 1
 
-        url: http://tempo:3200
+        url: http://nginx.gateway.svc.cluster.local.:3200
         basicAuth: false
         isDefault: false
         version: 1
@@ -2126,7 +2196,7 @@ data:
         type: prometheus
         access: proxy
         orgId: 1
-        url: http://mimir:9090
+        url: http://nginx.gateway.svc.cluster.local.:9090
         basicAuth: false
         isDefault: false
         version: 1
@@ -2137,7 +2207,7 @@ data:
     #      httpMethod: GET
 kind: ConfigMap
 metadata:
-  name: grafana-datasources-hbf9mg6g7d
+  name: grafana-datasources-td99f426mc
   namespace: galah-monitoring
 ---
 apiVersion: v1
@@ -2263,7 +2333,7 @@ spec:
           name: grafana-dashboards-4cg2m622f2
         name: dashboards
       - configMap:
-          name: grafana-datasources-hbf9mg6g7d
+          name: grafana-datasources-td99f426mc
         name: datasources
       - emptyDir:
           sizeLimit: 1Gi
@@ -2271,3 +2341,22 @@ spec:
       - configMap:
           name: grafana-config-2m4bfbk44d
         name: grafana-config
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    ingress.kubernetes.io/ssl-redirect: "false"
+  name: grafana
+  namespace: galah-monitoring
+spec:
+  rules:
+  - http:
+      paths:
+      - backend:
+          service:
+            name: grafana
+            port:
+              number: 3000
+        path: /grafana
+        pathType: Prefix

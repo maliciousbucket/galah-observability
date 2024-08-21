@@ -8,6 +8,7 @@ resources:
   - deployment.yaml
   - namespace.yaml
   - ingress.yaml
+  - rbac.yaml
 
 
 configMapGenerator:
