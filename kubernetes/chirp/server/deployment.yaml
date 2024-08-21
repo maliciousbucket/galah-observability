@@ -1,0 +1,42 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chirp-server
+  labels:
+    app.kubernetes.io/name: chirp-server
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: chirp-server
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: chirp-server
+    spec:
+      containers:
+        - name: chirp-server
+          image: docker.io/maliciousbucket/chirp-server:master
+          imagePullPolicy: IfNotPresent
+          ports:
+#            - TODO: Cjange to http-metrics for annotations scrape
+#            - TODO: serve prom metrics on seperate port
+            - containerPort: 7080
+              name: http
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 100m
+              memory: 256Mi
+          envFrom:
+            - secretRef:
+                name: server-env
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            capabilities:
+              drop:
+                - ALL
+

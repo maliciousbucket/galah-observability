@@ -1,0 +1,20 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: test-bed
+
+resources:
+  - namespace.yaml
+  - client/deployment.yaml
+  - client/service.yaml
+  - server/deployment.yaml
+  - server/service.yaml
+
+secretGenerator:
+  - name: client-env
+    envs:
+      - client.env
+    options:
+      disableNameSuffixHash: true
+  - name: server-env
+    envs:
+      - server.env
