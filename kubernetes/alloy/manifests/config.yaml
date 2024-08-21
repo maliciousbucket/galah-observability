@@ -145,12 +145,20 @@ data:
     \"default\" {}\n\nprovider.self_hosted_stack \"kubernetes\" {\n    metrics_endpoint
     = coalesce(env(\"METRICS_ENDPOINT\"), \"http://nginx.gateway.svc:9090/api/v1/push\")\n
     \   logs_endpoint = coalesce(env(\"LOGS_ENDPOINT\"), \"http://nginx.gateway.svc.cluster.local:3100/loki/api/v1/push\")\n
-    \   traces_endpoint = coalesce(env(\"TRACES_ENDPOINT\"), \"http://nginx.gateway.svc.cluster.local:3205\")\n}\n\nimport.file
+    \   traces_endpoint = coalesce(env(\"TRACES_ENDPOINT\"), \"http://nginx.gateway.svc.cluster.local:3205\")\n}\n\notelcol.exporter.loki
+    \"otlp_to_loki\" {\n    forward_to = [provider.self_hosted_stack.kubernetes.logs_receiver]\n}\n\notelcol.exporter.prometheus
+    \"otlp_to_prom\" {\n    forward_to = [provider.self_hosted_stack.kubernetes.metrics_receiver]\n}\n\nimport.file
     \"metrics\" {\n    filename = \"/etc/alloy/modules/kubernetes/metrics\"\n}\n\nmetrics.integrations_scrape
-    \"kubernetes\" {\n    forward_to = [provider.self_hosted_stack.kubernetes.metrics_receiver]\n}\n"
+    \"kubernetes\" {\n    forward_to = [provider.self_hosted_stack.kubernetes.metrics_receiver]\n}\n\nimport.file
+    \"k6\" {\n    filename = \"/etc/alloy/modules/kubernetes/collectors/k6-collector.alloy\"\n}\n\nk6.k6_collector
+    \"k6_metrics\" {\n    forward_to = [provider.self_hosted_stack.kubernetes.metrics_receiver]\n}\n\nimport.file
+    \"jobs\" {\n    filename = \"/etc/alloy/modules/kubernetes/jobs\"\n}\n\njobs.receive_otlp_telemetry
+    \"default\" {\n    metrics_forward_to = [otelcol.exporter.prometheus.otlp_to_prom.input]\n
+    \   logs_forward_to = [otelcol.exporter.loki.otlp_to_loki.input]\n    traces_forward_to
+    = [provider.self_hosted_stack.kubernetes.traces_receiver]\n}\n"
 kind: ConfigMap
 metadata:
-  name: alloy-config-h7kc7h9h6b
+  name: alloy-config-9c8g4564hf
   namespace: galah-monitoring
 ---
 apiVersion: v1
@@ -282,11 +290,11 @@ data:
     \"(^(go|process)_.+$)\")\n\t\t\taction        = \"drop\"\n\t\t}\n\n\t\t// keep
     only metrics that match the keep_metrics regex\n\t\trule {\n\t\t\tsource_labels
     = [\"__name__\"]\n\t\t\tregex         = coalesce(argument.keep_metrics.value,
-    \"(.+)\")\n\t\t\taction        = \"keep\"\n\t\t}\n\n\t\t// set the job label to
-    be namespace/pod as this is what the cloud integration expects\n\t\trule {\n\t\t\taction
+    \"(.+)\")\n\t\t\taction        = \"keep\"\n\t\t}\n\t\t/*\n\t\t// set the job label
+    to be namespace/pod as this is what the cloud integration expects\n\t\trule {\n\t\t\taction
     \       = \"replace\"\n\t\t\tsource_labels = [\n\t\t\t\t\"namespace\",\n\t\t\t\t\"workload\",\n\t\t\t]\n\t\t\tseparator
     \   = \"/\"\n\t\t\tregex        = \"(.+)/.+/(.+)\"\n\t\t\treplacement  = \"$1/$2\"\n\t\t\ttarget_label
-    = \"job\"\n\t\t}\n\t}\n}\n"
+    = \"job\"\n\t\t}\n\t\t*/\n\t}\n}\n"
   tempo.alloy: "declare \"integrations_tempo\" {\n\targument \"forward_to\" {\n\t\toptional
     = true\n\t}\n\n\t//Discovery Args\n\n\targument \"namespaces\" {\n\t\toptional
     = true\n\t\tdefault  = []\n\t}\n\n\targument \"field_selectors\" {\n\t\toptional
@@ -307,7 +315,7 @@ data:
     \ = argument.max_cache_size.value\n\t\tclustering      = argument.clustering.value\n\t}\n}\n"
 kind: ConfigMap
 metadata:
-  name: alloy-modules-integrations-g8bf4k6fhh
+  name: alloy-modules-integrations-h754dg99ch
   namespace: galah-monitoring
 ---
 apiVersion: v1
@@ -552,6 +560,14 @@ data:
     \"0.0.0.0:14268\")\n\t\t\t}\n\n\t\t\tthrift_binary {\n\t\t\t\tendpoint = coalesce(argument.thrift_binary_endpoint.value,
     \"0.0.0.0:6832\")\n\t\t\t}\n\n\t\t\tthrift_compact {\n\t\t\t\tendpoint = coalesce(argument.thrift_compact_endpoint.value,
     \"0.0.0.0:6831\")\n\t\t\t}\n\t\t}\n\n\t\toutput {\n\t\t\ttraces = argument.forward_to.value\n\t\t}\n\t}\n}\n"
+  k6-collector.alloy: "declare \"k6_collector\" {\n\targument \"forward_to\" {\n\t\toptional
+    = false\n\t}\n\n\targument \"http_endpoint\" {\n\t\toptional = true\n\t}\n\n\targument
+    \"grpc_endpoint\" {\n\t\toptional = true\n\t}\n\n\totelcol.exporter.prometheus
+    \"k6\" {\n\t\tforward_to          = argument.forward_to.value\n\t\tadd_metric_suffixes
+    = false\n\t}\n\n\totelcol.receiver.otlp \"k6\" {\n\t\tgrpc {\n\t\t\tendpoint =
+    coalesce(argument.grpc_endpoint.value, \"0.0.0.0:4320\")\n\t\t}\n\n\t\thttp {\n\t\t\tendpoint
+    = coalesce(argument.http_endpoint.value, \"0.0.0.0:4322\")\n\t\t}\n\n\t\toutput
+    {\n\t\t\tmetrics = [otelcol.exporter.prometheus.k6.input]\n\t\t}\n\t}\n}\n"
   loki-collector.alloy: "declare \"loki_collector\" {\n\targument \"forward_to\" {\n\t\toptional
     = true\n\t}\n\n\targument \"listen_address\" {\n\t\toptional = true\n\t\tdefault
     \ = \"\"\n\t}\n\n\targument \"listen_port\" {\n\t\toptional = true\n\t\tdefault
@@ -563,7 +579,7 @@ data:
     = coalesce(argument.relabel_rules.value, {})\n\t\tforward_to    = argument.forward_to.value\n\t}\n}\n"
   otlp-collector.alloy: "declare \"otlp_collector\" {\n\targument \"metrics_forward_to\"
     {\n\t\toptional = false\n\t\tcomment  = \"Must be a list(MetricReceiver) where
-    collected metrics are sent\"\n\t}\n\n\targument \"traces_forward_to\" {\n\t\toptional
+    collected metrics are sent\"\n\t}\n\n\targument \"logs_forward_to\" {\n\t\toptional
     = false\n\t\tcomment  = \"Must be a list(otelcol.Consumer) where collected logs
     are sent\"\n\t}\n\n\targument \"traces_forward_to\" {\n\t\toptional = false\n\t\tcomment
     \ = \"Must be a list(otelcol.Consumer) where collected traces are sent\"\n\t}\n\n\targument
@@ -574,12 +590,14 @@ data:
     \"logs_url_path\" {\n\t\toptional = true\n\t\tdefault  = \"/v1/logs\"\n\t}\n\n\targument
     \"traces_url_path\" {\n\t\toptional = true\n\t\tdefault  = \"/v1/traces\"\n\t}\n\n\totelcol.receiver.otlp
     \"otlp_collector\" {\n\t\tgrpc {\n\t\t\tendpoint  = coalesce(argument.grpc_endpoint.value,
-    \"0.0.0.0:4317\")\n\t\t\ttransport = argument.transport.value\n\t\t}\n\n\t\thttp
+    \"0.0.0.0:4317\")\n\t\t\ttransport = coalesce(argument.grpc_transport.value, \"tcp\")\n\t\t}\n\n\t\thttp
     {\n\t\t\tendpoint         = coalesce(argument.http_endpoint.value, \"0.0.0.0:4318\")\n\t\t\tmetrics_url_path
-    = argument.metrics_url_path.value\n\t\t\tlogs_url_path    = argument.logs_url_path.value\n\t\t\ttraces_url_path
-    \ = argument.traces_url_path.value\n\t\t}\n\n\t\toutput {\n\t\t\tmetrics = argument.metrics_forward_to.value\n\t\t\tlogs
-    \   = argument.logs_forward_to.value\n\t\t\ttraces  = argument.traces_forward_to.value\n\t\t}\n\n\t\tdebug_metrics
-    { }\n\t}\n}\n"
+    = coalesce(argument.metrics_url_path.value, \"/v1/metrics\")\n\t\t\tlogs_url_path
+    \   = coalesce(argument.logs_url_path.value, \"/v1/logs\")\n\t\t\ttraces_url_path
+    \ = coalesce(argument.traces_url_path.value, \"/v1/traces\")\n\t\t}\n\n\t\toutput
+    {\n\t\t\tmetrics = argument.metrics_forward_to.value\n\t\t\tlogs    = argument.logs_forward_to.value\n\t\t\ttraces
+    \ = argument.traces_forward_to.value\n\t\t}\n\n\t\tdebug_metrics {\n\t\t\tdisable_high_cardinality_metrics
+    = true\n\t\t}\n\t}\n}\n"
   prometheus-collector.alloy: "declare \"prometheus_collector\" {\n\targument \"listen_address\"
     {\n\t\toptional = true\n\t\tdefault  = \"\"\n\t}\n\n\targument \"listen_port\"
     {\n\t\toptional = true\n\t\tdefault  = 9009\n\t}\n\n\targument \"forward_to\"
@@ -596,13 +614,46 @@ data:
     {\n\t\t\ttraces = argument.forward_to.value\n\t\t}\n\t}\n}\n"
 kind: ConfigMap
 metadata:
-  name: alloy-modules-kubernetes-collectors-bk77mt958c
+  name: alloy-modules-kubernetes-collectors-46chb9c2f8
   namespace: galah-monitoring
 ---
 apiVersion: v1
+data:
+  receive-otlp-telemetry.alloy: "declare \"receive_otlp_telemetry\" {\n\targument
+    \"metrics_forward_to\" {\n\t\toptional = false\n\t}\n\n\targument \"logs_forward_to\"
+    {\n\t\toptional = false\n\t}\n\n\targument \"traces_forward_to\" {\n\t\toptional
+    = false\n\t}\n\n\t//OTLP\n\n\targument \"otlp_grpc_endpoint\" {\n\t\toptional
+    = true\n\t}\n\n\targument \"otlp_grpc_transport\" {\n\t\toptional = true\n\t}\n\n\targument
+    \"otlp_http_endpoint\" {\n\t\toptional = true\n\t}\n\n\targument \"otlp_metrics_path\"
+    {\n\t\toptional = true\n\t}\n\n\targument \"otlp_logs_path\" {\n\t\toptional =
+    true\n\t}\n\n\targument \"otlp_traces_path\" {\n\t\toptional = true\n\t}\n\n\t//JAEGER\n\n\targument
+    \"jaeger_grpc_endpoint\" {\n\t\toptional = true\n\t}\n\n\targument \"jaeger_grpc_transport\"
+    {\n\t\toptional = true\n\t}\n\n\targument \"jaeger_thrift_http_endpoint\" {\n\t\toptional
+    = true\n\t}\n\n\targument \"jaeger_thrift_binary_endpoint\" {\n\t\toptional =
+    true\n\t}\n\n\targument \"jaeger_thrift_compact_endpoint\" {\n\t\toptional = true\n\t}\n\n\t//ZIPKIN\n\n\targument
+    \"zipkin_endpoint\" {\n\t\toptional = true\n\t}\n\n\totelcol.processor.batch \"default\"
+    {\n\t\toutput {\n\t\t\tmetrics = argument.metrics_forward_to.value\n\t\t\tlogs
+    \   = argument.logs_forward_to.value\n\t\t\ttraces  = argument.traces_forward_to.value\n\t\t}\n\t}\n\n\totelcol.processor.memory_limiter
+    \"default\" {\n\t\tcheck_interval         = \"1s\"\n\t\tlimit_percentage       =
+    50\n\t\tspike_limit_percentage = 25\n\n\t\toutput {\n\t\t\tmetrics = [otelcol.processor.batch.default.input]\n\t\t\tlogs
+    \   = [otelcol.processor.batch.default.input]\n\t\t\ttraces  = [otelcol.processor.batch.default.input]\n\t\t}\n\t}\n\n\timport.file
+    \"collectors\" {\n\t\tfilename = \"/etc/alloy/modules/kubernetes/collectors\"\n\t}\n\n\tcollectors.otlp_collector
+    \"otlp\" {\n\t\tmetrics_forward_to = [otelcol.processor.memory_limiter.default.input]\n\t\tlogs_forward_to
+    \   = [otelcol.processor.memory_limiter.default.input]\n\t\ttraces_forward_to
+    \ = [otelcol.processor.memory_limiter.default.input]\n\t\tgrpc_endpoint      =
+    argument.otlp_grpc_endpoint.value\n\t\tgrpc_transport     = argument.otlp_grpc_transport.value\n\t\thttp_endpoint
+    \     = argument.otlp_http_endpoint.value\n\t\tmetrics_url_path   = argument.otlp_metrics_path.value\n\t\tlogs_url_path
+    \     = argument.otlp_logs_path.value\n\t\ttraces_url_path    = argument.otlp_traces_path.value\n\t}\n\n\tcollectors.jaeger_collector
+    \"jaeger\" {\n\t\tforward_to              = [otelcol.processor.memory_limiter.default.input]\n\t\tgrpc_endpoint
+    \          = argument.jaeger_grpc_endpoint.value\n\t\tgrpc_transport           =
+    argument.jaeger_grpc_transport.value\n\t\tthrift_http_endpoint    = argument.jaeger_thrift_http_endpoint.value\n\t\tthrift_binary_endpoint
+    \ = argument.jaeger_thrift_binary_endpoint.value\n\t\tthrift_compact_endpoint
+    = argument.jaeger_thrift_compact_endpoint.value\n\t}\n\n\tcollectors.zipkin_collector
+    \"zipkin\" {\n\t\tforward_to = [otelcol.processor.memory_limiter.default.input]\n\t\tendpoint
+    \  = argument.zipkin_endpoint.value\n\t}\n}\n"
 kind: ConfigMap
 metadata:
-  name: alloy-modules-kubernetes-jobs-6ct58987ht
+  name: alloy-modules-kubernetes-jobs-cft2kf8k4t
   namespace: galah-monitoring
 ---
 apiVersion: v1
@@ -1191,6 +1242,14 @@ spec:
     port: 9411
     protocol: TCP
     targetPort: 9411
+  - name: k6-grpc
+    port: 4325
+    protocol: TCP
+    targetPort: 4325
+  - name: k6-http
+    port: 4326
+    protocol: TCP
+    targetPort: 4326
   selector:
     app.kubernetes.io/instance: alloy
     app.kubernetes.io/name: alloy
@@ -1252,6 +1311,14 @@ spec:
     port: 9411
     protocol: TCP
     targetPort: 9411
+  - name: k6-grpc
+    port: 4325
+    protocol: TCP
+    targetPort: 4325
+  - name: k6-http
+    port: 4326
+    protocol: TCP
+    targetPort: 4326
   publishNotReadyAddresses: true
   selector:
     app.kubernetes.io/instance: alloy
@@ -1343,6 +1410,12 @@ spec:
         - containerPort: 9411
           name: zipkin
           protocol: TCP
+        - containerPort: 4325
+          name: k6-grpc
+          protocol: TCP
+        - containerPort: 4326
+          name: k6-http
+          protocol: TCP
         readinessProbe:
           httpGet:
             path: /-/ready
@@ -1394,7 +1467,7 @@ spec:
       serviceAccountName: alloy
       volumes:
       - configMap:
-          name: alloy-config-h7kc7h9h6b
+          name: alloy-config-9c8g4564hf
         name: config
       - configMap:
           name: alloy-modules-kubernetes-metrics-2c8kg5bffh
@@ -1406,16 +1479,16 @@ spec:
           name: alloy-modules-kubernetes-traces-6ct58987ht
         name: modules-kubernetes-traces
       - configMap:
-          name: alloy-modules-kubernetes-jobs-6ct58987ht
+          name: alloy-modules-kubernetes-jobs-cft2kf8k4t
         name: modules-kubernetes-jobs
       - configMap:
-          name: alloy-modules-integrations-g8bf4k6fhh
+          name: alloy-modules-integrations-h754dg99ch
         name: modules-integrations
       - configMap:
           name: alloy-modules-integrations-kubernetes-kf762t8df8
         name: modules-integrations-kubernetes
       - configMap:
-          name: alloy-modules-kubernetes-collectors-bk77mt958c
+          name: alloy-modules-kubernetes-collectors-46chb9c2f8
         name: modules-kubernetes-collectors
       - configMap:
           name: alloy-modules-kubernetes-provider-bhb9bm922h

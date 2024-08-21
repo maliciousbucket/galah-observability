@@ -1,0 +1,32 @@
+declare "k6_collector" {
+	argument "forward_to" {
+		optional = false
+	}
+
+	argument "http_endpoint" {
+		optional = true
+	}
+
+	argument "grpc_endpoint" {
+		optional = true
+	}
+
+	otelcol.exporter.prometheus "k6" {
+		forward_to          = argument.forward_to.value
+		add_metric_suffixes = false
+	}
+
+	otelcol.receiver.otlp "k6" {
+		grpc {
+			endpoint = coalesce(argument.grpc_endpoint.value, "0.0.0.0:4320")
+		}
+
+		http {
+			endpoint = coalesce(argument.http_endpoint.value, "0.0.0.0:4322")
+		}
+
+		output {
+			metrics = [otelcol.exporter.prometheus.k6.input]
+		}
+	}
+}

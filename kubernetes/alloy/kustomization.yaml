@@ -44,6 +44,8 @@ configMapGenerator:
 
   - name: alloy-modules-kubernetes-jobs
     namespace: galah-monitoring
+    files:
+    - configs/alloy-modules/kubernetes/jobs/receive-otlp-telemetry.alloy
 
   - name: alloy-modules-integrations
     namespace: galah-monitoring
@@ -71,6 +73,7 @@ configMapGenerator:
     - configs/alloy-modules/kubernetes/collectors/otlp/otlp-collector.alloy
     - configs/alloy-modules/kubernetes/collectors/prometheus/prometheus-collector.alloy
     - configs/alloy-modules/kubernetes/collectors/zipkin/zipkin-collector.alloy
+    - configs/alloy-modules/kubernetes/collectors/k6/k6-collector.alloy
 
 
   - name: alloy-modules-kubernetes-provider

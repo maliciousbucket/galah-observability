@@ -58,6 +58,14 @@ alloy:
     port: 9411
     targetPort: 9411
     protocol: "TCP"
+  - name: "k6-grpc"
+    port: 4325
+    protocol: "TCP"
+    targetPort: 4325
+  - name: "k6-http"
+    port: 4326
+    protocol: "TCP"
+    targetPort: 4326
   mounts:
     extra:
     - name: modules-kubernetes-metrics

@@ -85,7 +85,7 @@ declare "receive_otlp_telemetry" {
 		}
 	}
 
-	import.files "collectors" {
+	import.file "collectors" {
 		filename = "/etc/alloy/modules/kubernetes/collectors"
 	}
 
@@ -104,7 +104,7 @@ declare "receive_otlp_telemetry" {
 	collectors.jaeger_collector "jaeger" {
 		forward_to              = [otelcol.processor.memory_limiter.default.input]
 		grpc_endpoint           = argument.jaeger_grpc_endpoint.value
-		grpc_protocol           = argument.jaeger_grpc_protocol.value
+		grpc_transport           = argument.jaeger_grpc_transport.value
 		thrift_http_endpoint    = argument.jaeger_thrift_http_endpoint.value
 		thrift_binary_endpoint  = argument.jaeger_thrift_binary_endpoint.value
 		thrift_compact_endpoint = argument.jaeger_thrift_compact_endpoint.value

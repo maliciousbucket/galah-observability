@@ -4,7 +4,7 @@ declare "otlp_collector" {
 		comment  = "Must be a list(MetricReceiver) where collected metrics are sent"
 	}
 
-	argument "traces_forward_to" {
+	argument "logs_forward_to" {
 		optional = false
 		comment  = "Must be a list(otelcol.Consumer) where collected logs are sent"
 	}
@@ -47,7 +47,7 @@ declare "otlp_collector" {
 	otelcol.receiver.otlp "otlp_collector" {
 		grpc {
 			endpoint  = coalesce(argument.grpc_endpoint.value, "0.0.0.0:4317")
-			transport = coalesce(argument.transport.value, "tcp")
+			transport = coalesce(argument.grpc_transport.value, "tcp")
 		}
 
 		http {
