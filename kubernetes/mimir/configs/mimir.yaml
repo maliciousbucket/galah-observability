@@ -9,23 +9,27 @@ server:
   log_level: info
 
 
-api:
-  prometheus_http_prefix: '/prom'
+memberlist:
+  join_members: [ mimir-memberlist:7946 ]
 
-distributor:
+#
+#api:
+#  prometheus_http_prefix: ''
+#
 
-  ring:
-    #TODO: Set to env
-    instance_addr: 127.0.0.1
-
-    kvstore:
-      store: memberlist
+#distributor:
+#
+#  ring:
+#    #TODO: Set to env
+#    instance_addr: 127.0.0.1
+#
+#    kvstore:
+#      store: memberlist
 
 ingester:
 
   ring:
-    # TODO: Set to env
-#    instance_addr: 127.0.0.1
+    #    instance_addr: 127.0.0.1
 
     kvstore:
       store: inmemory
@@ -68,11 +72,11 @@ blocks_storage:
   #TODO: Consider using an S3 or something
   backend: filesystem
 
-  bucket_store:
-    sync_dir: /tmp/mimir/tsdb-sync
-  
-  filesystem:
-    dir: /tmp/mimir/data/tsdb
+#  bucket_store:
+#    sync_dir: /tmp/mimir/tsdb-sync
+#
+#  filesystem:
+#    dir: /tmp/mimir/data/tsdb
 
   tsdb:
     dir: /data/ingester
@@ -83,8 +87,8 @@ blocks_storage:
 ruler:
   rule_path: /data/rules
   enable_api: true
-#  alertmanager_url: http://mimir:9090/alertmanager
-  alertmanager_url: http://mimir-backend:9090/alertmanager
+  alertmanager_url: http://localhost:9090/alertmanager
+#  alertmanager_url: http://mimir-backend:9090/alertmanager
 
 
 
