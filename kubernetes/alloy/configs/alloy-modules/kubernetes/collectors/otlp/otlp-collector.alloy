@@ -44,9 +44,13 @@ declare "otlp_collector" {
 		default  = "/v1/traces"
 	}
 
+	otelcol.exporter.debug "otlp_collector" { }
+
 	otelcol.receiver.otlp "otlp_collector" {
+		/*
 		grpc {
-			endpoint  = coalesce(argument.grpc_endpoint.value, "0.0.0.0:4317")
+			//endpoint  = coalesce(argument.grpc_endpoint.value, "0.0.0.0:4317")
+			endpoint  = "0.0.0.0:4319"
 			transport = coalesce(argument.grpc_transport.value, "tcp")
 		}
 
@@ -56,15 +60,15 @@ declare "otlp_collector" {
 			logs_url_path    = coalesce(argument.logs_url_path.value, "/v1/logs")
 			traces_url_path  = coalesce(argument.traces_url_path.value, "/v1/traces")
 		}
+		*/
+		http { }
+
+		grpc { }
 
 		output {
-			metrics = argument.metrics_forward_to.value
+			metrics = concat(argument.metrics_forward_to.value, [otelcol.exporter.debug.otlp_collector.input])
 			logs    = argument.logs_forward_to.value
 			traces  = argument.traces_forward_to.value
-		}
-
-		debug_metrics {
-			disable_high_cardinality_metrics = true
 		}
 	}
 }

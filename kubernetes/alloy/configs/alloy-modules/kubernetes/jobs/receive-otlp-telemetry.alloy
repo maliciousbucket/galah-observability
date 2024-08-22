@@ -15,26 +15,32 @@ declare "receive_otlp_telemetry" {
 
 	argument "otlp_grpc_endpoint" {
 		optional = true
+		default  = "0.0.0.0:4317"
 	}
 
 	argument "otlp_grpc_transport" {
 		optional = true
+		default  = "tcp"
 	}
 
 	argument "otlp_http_endpoint" {
 		optional = true
+		default  = "0.0.0.0:4318"
 	}
 
 	argument "otlp_metrics_path" {
 		optional = true
+		default  = "/v1/metrics"
 	}
 
 	argument "otlp_logs_path" {
 		optional = true
+		default  = "/v1/logs"
 	}
 
 	argument "otlp_traces_path" {
 		optional = true
+		default  = "/v1/traces"
 	}
 
 	//JAEGER
@@ -65,6 +71,8 @@ declare "receive_otlp_telemetry" {
 		optional = true
 	}
 
+	otelcol.exporter.debug "jobs_otlp" { }
+
 	otelcol.processor.batch "default" {
 		output {
 			metrics = argument.metrics_forward_to.value
@@ -79,7 +87,7 @@ declare "receive_otlp_telemetry" {
 		spike_limit_percentage = 25
 
 		output {
-			metrics = [otelcol.processor.batch.default.input]
+			metrics = [otelcol.processor.batch.default.input, otelcol.exporter.debug.jobs_otlp.input]
 			logs    = [otelcol.processor.batch.default.input]
 			traces  = [otelcol.processor.batch.default.input]
 		}
@@ -96,15 +104,17 @@ declare "receive_otlp_telemetry" {
 		grpc_endpoint      = argument.otlp_grpc_endpoint.value
 		grpc_transport     = argument.otlp_grpc_transport.value
 		http_endpoint      = argument.otlp_http_endpoint.value
+		/*
 		metrics_url_path   = argument.otlp_metrics_path.value
 		logs_url_path      = argument.otlp_logs_path.value
 		traces_url_path    = argument.otlp_traces_path.value
+		*/
 	}
 
 	collectors.jaeger_collector "jaeger" {
 		forward_to              = [otelcol.processor.memory_limiter.default.input]
 		grpc_endpoint           = argument.jaeger_grpc_endpoint.value
-		grpc_transport           = argument.jaeger_grpc_transport.value
+		grpc_transport          = argument.jaeger_grpc_transport.value
 		thrift_http_endpoint    = argument.jaeger_thrift_http_endpoint.value
 		thrift_binary_endpoint  = argument.jaeger_thrift_binary_endpoint.value
 		thrift_compact_endpoint = argument.jaeger_thrift_compact_endpoint.value

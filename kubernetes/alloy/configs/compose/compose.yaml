@@ -11,12 +11,14 @@ services:
       - source: alloy_config_file
         target: /etc/alloy/config.alloy
     volumes:
-      - ../alloy-modules:/etc/alloy/modules
+#      - ../alloy-modules:/etc/alloy/modules
       - ../alloy-modules/kubernetes/collectors/jaeger/jaeger-collector.alloy:/etc/alloy/modules/kubernetes/collectors/jaeger-collector.alloy
       - ../alloy-modules/kubernetes/collectors/loki/loki-collector.alloy:/etc/alloy/modules/kubernetes/collectors/loki-collector.alloy
       - ../alloy-modules/kubernetes/collectors/otlp/otlp-collector.alloy:/etc/alloy/modules/kubernetes/collectors/otlp-collector.alloy
       - ../alloy-modules/kubernetes/collectors/prometheus/prometheus-collector.alloy:/etc/alloy/modules/kubernetes/collectors/prometheus-collector.alloy
       - ../alloy-modules/kubernetes/collectors/zipkin/zipkin-collector.alloy:/etc/alloy/modules/kubernetes/collectors/zipkin-collector.alloy
+      - ../alloy-modules/kubernetes/collectors/k6/k6-collector.alloy:/etc/alloy/modules/kubernetes/collectors/k6-collector.alloy
+
 
       - ../alloy-modules/kubernetes/integrations/alloy.alloy:/etc/alloy/modules/kubernetes/integrations/alloy.alloy
       - ../alloy-modules/kubernetes/integrations/discovery.alloy:/etc/alloy/modules/kubernetes/integrations/discovery.alloy
@@ -31,6 +33,12 @@ services:
       - ../alloy-modules/kubernetes/metrics/podmonitors.alloy:/etc/alloy/modules/kubernetes/metrics/podmonitors.alloy
       - ../alloy-modules/kubernetes/metrics/servicemonitors.alloy:/etc/alloy/modules/kubernetes/metrics/servicemonitors.alloy
 
+      - ../alloy-modules/kubernetes/jobs/receive-otlp-telemetry.alloy:/etc/alloy/modules/kubernetes/jobs/receive-otlp-telemetry.alloy
+
+
+      - ../alloy-modules/provider/self_hosted.alloy:/etc/alloy/modules/provider/self_hosted.alloy
+
+
 
 
     entrypoint:
@@ -44,4 +52,4 @@ services:
       - --stability.level=experimental
       - --storage.path=/var/lib/alloy/data
     ports:
-      - "12345:12345"
+      - "85:85"

@@ -1,55 +1,55 @@
 logging {
-	level  = "info"
-	format = "logfmt"
+	level    = "info"
+	format   = "logfmt"
 	write_to = [provider.self_hosted_stack.kubernetes.logs_receiver]
 }
 
 livedebugging {
-  enabled = true
+	enabled = true
 }
 
 import.file "provider" {
-    filename = "/etc/alloy/modules/provider"
+	filename = "/etc/alloy/modules/provider"
 }
 
-otelcol.exporter.debug "default" {}
+otelcol.exporter.debug "default" { }
 
 provider.self_hosted_stack "kubernetes" {
-    metrics_endpoint = coalesce(env("METRICS_ENDPOINT"), "http://nginx.gateway.svc:9090/api/v1/push")
-    logs_endpoint = coalesce(env("LOGS_ENDPOINT"), "http://nginx.gateway.svc.cluster.local:3100/loki/api/v1/push")
-    traces_endpoint = coalesce(env("TRACES_ENDPOINT"), "http://nginx.gateway.svc.cluster.local:3205")
+	metrics_endpoint = coalesce(env("METRICS_ENDPOINT"), "http://nginx.gateway.svc:9090/api/v1/push")
+	logs_endpoint    = coalesce(env("LOGS_ENDPOINT"), "http://nginx.gateway.svc.cluster.local:3100/loki/api/v1/push")
+	traces_endpoint  = coalesce(env("TRACES_ENDPOINT"), "http://nginx.gateway.svc.cluster.local:3205")
 }
 
 otelcol.exporter.loki "otlp_to_loki" {
-    forward_to = [provider.self_hosted_stack.kubernetes.logs_receiver]
+	forward_to = [provider.self_hosted_stack.kubernetes.logs_receiver]
 }
 
 otelcol.exporter.prometheus "otlp_to_prom" {
-    forward_to = [provider.self_hosted_stack.kubernetes.metrics_receiver]
+	forward_to = [provider.self_hosted_stack.kubernetes.metrics_receiver]
 }
 
 import.file "metrics" {
-    filename = "/etc/alloy/modules/kubernetes/metrics"
+	filename = "/etc/alloy/modules/kubernetes/metrics"
 }
 
 metrics.integrations_scrape "kubernetes" {
-    forward_to = [provider.self_hosted_stack.kubernetes.metrics_receiver]
+	forward_to = [provider.self_hosted_stack.kubernetes.metrics_receiver]
 }
 
 import.file "k6" {
-    filename = "/etc/alloy/modules/kubernetes/collectors/k6-collector.alloy"
+	filename = "/etc/alloy/modules/kubernetes/collectors/k6-collector.alloy"
 }
 
 k6.k6_collector "k6_metrics" {
-    forward_to = [provider.self_hosted_stack.kubernetes.metrics_receiver]
+	forward_to = [provider.self_hosted_stack.kubernetes.metrics_receiver]
 }
 
 import.file "jobs" {
-    filename = "/etc/alloy/modules/kubernetes/jobs"
+	filename = "/etc/alloy/modules/kubernetes/jobs"
 }
 
 jobs.receive_otlp_telemetry "default" {
-    metrics_forward_to = [otelcol.exporter.prometheus.otlp_to_prom.input]
-    logs_forward_to = [otelcol.exporter.loki.otlp_to_loki.input]
-    traces_forward_to = [provider.self_hosted_stack.kubernetes.traces_receiver]
+	metrics_forward_to = [otelcol.exporter.prometheus.otlp_to_prom.input]
+	logs_forward_to    = [otelcol.exporter.loki.otlp_to_loki.input]
+	traces_forward_to  = [provider.self_hosted_stack.kubernetes.traces_receiver]
 }

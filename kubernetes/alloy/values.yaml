@@ -127,6 +127,8 @@ ingress:
   faroPort: 12345
   hosts:
     - alloy.localhost
+    - alloy.local
+    - alloy.galah-monitoring.svc.cluster
 
 serviceMonitor:
   enabled: true
