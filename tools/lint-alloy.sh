@@ -2,7 +2,7 @@
 
 # Yep, its just the Grafana River lint script
 
-cd "alloy-modules/" || exit
+#cd "alloy-modules/" || exit
 
 # check if the alloy CLI tool is installed
 if [[ "$(command -v alloy)" == "" ]]; then

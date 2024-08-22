@@ -27,7 +27,7 @@ K3D_VERSION ?= v5.7.3
 ##@ Tools
 
 .PHONY: kustomize
-kustomize: $(KUSTOMIZE)
+kustomize: $(KUSTOMIZE) ## Install Kustomize to the project's /bin/ directory
 $(KUSTOMIZE): $(LOCALBIN)
 	$(call go-install-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v5,$(KUSTOMIZE_VERSION))
 
@@ -35,7 +35,7 @@ $(KUSTOMIZE): $(LOCALBIN)
 
 
 
-.PHONY: k3d
+.PHONY: k3d ## Install K3D to the project's /bin/ directory
 k3d: $(K3D)
 $(K3D): $(LOCALBIN)
 	$(call go-install-tool,$(K3D),github.com/k3d-io/k3d/v5,$(K3D_VERSION))
@@ -65,7 +65,7 @@ manifests:
 manifests: $(KUSTOMIZE) manifests-monitoring manifests-crds
 
 #manifests-monitoring:
-manifests-monitoring: $(KUSTOMIZE) manifests-grafana manifests-mimir manifests-loki manifests-tempo manifests-gateway ## Generate all monitoring manifests
+manifests-monitoring: $(KUSTOMIZE) manifests-grafana manifests-mimir manifests-loki manifests-tempo manifests-tempo-helm manifests-gateway manifests-alloy ## Generate all monitoring manifests
 
 manifests-crds: $(KUSTOMIZE) manifests-cert-manager manifests-prom-operator manifests-kube-state-metrics ## Generate Cert manager and CRD manifests
 
@@ -100,12 +100,23 @@ manifests-cert-manager: $(KUSTOMIZE) ## Generate Cert Manager manifests
 manifests-kube-state-metrics: $(KUSTOMIZE) ## Generate Kube State Metrics CRD manifests
 	$(KUSTOMIZE) build --enable-helm kubernetes/kube-state-metrics > kubernetes/kube-state-metrics/manifests/config.yaml
 
+manifests-tempo-helm: $(KUSTOMIZE) ## Generate Tempo manifests using the Helm Chart
+	$(KUSTOMIZE) build --enable-helm kubernetes/tempo/helm > kubernetes/tempo/helm/manifests/config.yaml
+
+## Etc
+
+manifests-chirp:
+	$(KUSTOMIZE) build kubernetes/chirp > kubernetes/chirp/manifests/config.yaml
+
 ##@ Deployment
 
 .PHONY: deploy-gateway
 deploy-gateway: ## Deploy Gateway
 	@kubectl apply -f kubernetes/gateway/manifests/config.yaml
 	@kubectl rollout status -n gateway deployment/nginx --watch --timeout=300s
+
+delete-gateway:
+	@kubectl delete --ignore-not-found -f kubernetes/gateway/manifests/config.yaml
 
 .PHONY: deploy-minio
 deploy-minio: ## Deploy Minio Operator and Tenant
@@ -131,10 +142,18 @@ deploy-alloy: ## Deploy Alloy and Alloy Operator
 	@kubectl apply -f kubernetes/alloy/manifests/config.yaml
 	@kubectl rollout status -n galah-monitoring statefulset/alloy --watch --timeout=300s
 
+delete-alloy: ## Delete Alloy and Alloy Operator
+	@kubectl delete --ignore-not-found -f kubernetes/alloy/manifests/config.yaml
+
 .PHONY: deploy-tempo
 deploy-tempo: ## Deploy Tempo
 	@kubectl apply -f kubernetes/tempo/manifests/config.yaml
 	@kubectl rollout status -n galah-tracing statefulset/tempo --watch --timeout=300s
+
+.PHONY: deploy-tempo-helm
+deploy-tempo-helm: ## Deploy Tempo using the Helm Chart configuration
+	@kubectl apply -f kubernetes/tempo/helm/manifests/config.yaml
+	@kubectl rollout status -n galah-tracing statefulset/tempo
 
 .PHONY: deploy-mimir
 deploy-mimir: ## Deploy Mimir
@@ -145,6 +164,23 @@ deploy-mimir: ## Deploy Mimir
 deploy-loki: ## Deploy Loki
 	@kubectl apply -f kubernetes/loki/manifests/config.yaml
 	@kubectl rollout status -n galah-logging statefulset/loki --watch --timeout=300s
+
+.PHONY: deploy-monitoring
+deploy-monitoring: deploy-gateway deploy-minio deploy-grafana deploy-mimir deploy-loki deploy-tempo-helm deploy-alloy ## Deploy monitoring infrastructure
+
+
+##@ Other
+
+.PHONY: deploy-chirp
+deploy-chirp: ## Deploy Chirp client and server
+	@kubectl apply -f kubernetes/chirp/manifests/config.yaml
+	@kubectl rollout status -n test-bed deployment/chirp-server --watch --timeout=120s
+
+delete-chirp: ## Delete chirp client and server
+	@kubectl delete --ignore-not-found -f kubernetes/chirp/manifests/config.yaml
+
+deploy-dashboard: ## Deploy K8s dashboard
+	$(SHELL) tools/k8s-dashboard.sh
 
 
 define go-install-tool

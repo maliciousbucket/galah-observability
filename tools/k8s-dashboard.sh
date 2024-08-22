@@ -27,12 +27,8 @@ echo "Token is available in secure.txt (I am passionate about security)"
 
 step "Opening port for dashboard access"
 
-exe "kubectl -n kubernetes-dashboard port-forward svc/kubernetes-dashboard-kong-proxy 8444:443"
+sleep 20
 
+success "Login to the dashboard at (https://localhost:8443)"
 
-
-success "Login to the dashboard at https://localhost:8443/#/login"
-
-step "Starting Kubectl proxy"
-
-exe "kubectl proxy"
+exe "kubectl -n kubernetes-dashboard port-forward svc/kubernetes-dashboard-kong-proxy 8443:443"
