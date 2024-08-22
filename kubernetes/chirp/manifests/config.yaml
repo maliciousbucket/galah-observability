@@ -5,8 +5,8 @@ metadata:
 ---
 apiVersion: v1
 data:
-  DEMO_SERVER_ENDPOINT: aHR0cDovL2RlbW8tc2VydmVyOjcwODAvaGVsbG8=
-  OTEL_EXPORTER_OTLP_ENDPOINT: bG9jYWxob3N0OjQzMTc=
+  DEMO_SERVER_ENDPOINT: aHR0cDovL2NoaXJwLXNlcnZlcjo3MDgwL2hlbGxv
+  OTEL_EXPORTER_OTLP_ENDPOINT: YWxsb3kuZ2FsYWgtbW9uaXRvcmluZy5zdmMuY2x1c3Rlci5sb2NhbDo0MzE3
 kind: Secret
 metadata:
   name: client-env
@@ -15,10 +15,10 @@ type: Opaque
 ---
 apiVersion: v1
 data:
-  OTEL_EXPORTER_OTLP_ENDPOINT: bG9jYWxob3N0OjQzMTc=
+  OTEL_EXPORTER_OTLP_ENDPOINT: YWxsb3kuZ2FsYWgtbW9uaXRvcmluZy5zdmMuY2x1c3Rlci5sb2NhbDo0MzE3
 kind: Secret
 metadata:
-  name: server-env-6dcc826kb5
+  name: server-env-7428th2b97
   namespace: test-bed
 type: Opaque
 ---
@@ -112,7 +112,7 @@ spec:
       containers:
       - envFrom:
         - secretRef:
-            name: server-env-6dcc826kb5
+            name: server-env-7428th2b97
         image: docker.io/maliciousbucket/chirp-server:master
         imagePullPolicy: IfNotPresent
         name: chirp-server

@@ -87,7 +87,7 @@ declare "receive_otlp_telemetry" {
 		spike_limit_percentage = 25
 
 		output {
-			metrics = [otelcol.processor.batch.default.input, otelcol.exporter.debug.jobs_otlp.input]
+			metrics = [otelcol.processor.batch.default.input]
 			logs    = [otelcol.processor.batch.default.input]
 			traces  = [otelcol.processor.batch.default.input]
 		}

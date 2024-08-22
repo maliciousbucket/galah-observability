@@ -66,6 +66,9 @@ alloy:
     port: 4326
     protocol: "TCP"
     targetPort: 4326
+  - name: "grpc-chirp"
+    port: 4319
+    targetPort: 4319
   mounts:
     extra:
     - name: modules-kubernetes-metrics

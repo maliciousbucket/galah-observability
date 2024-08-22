@@ -63,7 +63,9 @@ declare "otlp_collector" {
 		*/
 		http { }
 
-		grpc { }
+		grpc {
+		    endpoint = "0.0.0.0:4317"
+		}
 
 		output {
 			metrics = concat(argument.metrics_forward_to.value, [otelcol.exporter.debug.otlp_collector.input])

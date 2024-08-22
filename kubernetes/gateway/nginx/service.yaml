@@ -16,5 +16,7 @@ spec:
       name: http-tempo
     - port: 3205
       name: grpc-tempo
+    - port: 4317
+      name: grpc-otlp-tempo
   selector:
     app: nginx

@@ -34,6 +34,8 @@ spec:
               name: http-tempo
             - containerPort: 3205
               name: grpc-tempo
+            - containerPort: 4317
+              name: grpc-otlp-tempo
           volumeMounts:
             - mountPath: /etc/nginx/templates
               name: templates

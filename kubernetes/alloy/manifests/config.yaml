@@ -144,8 +144,8 @@ data:
     = true\n}\n\nimport.file \"provider\" {\n\tfilename = \"/etc/alloy/modules/provider\"\n}\n\notelcol.exporter.debug
     \"default\" { }\n\nprovider.self_hosted_stack \"kubernetes\" {\n\tmetrics_endpoint
     = coalesce(env(\"METRICS_ENDPOINT\"), \"http://nginx.gateway.svc:9090/api/v1/push\")\n\tlogs_endpoint
-    \   = coalesce(env(\"LOGS_ENDPOINT\"), \"http://nginx.gateway.svc.cluster.local:3100/loki/api/v1/push\")\n\ttraces_endpoint
-    \ = coalesce(env(\"TRACES_ENDPOINT\"), \"http://nginx.gateway.svc.cluster.local:3205\")\n}\n\notelcol.exporter.loki
+    \   = coalesce(env(\"LOGS_ENDPOINT\"), \"http://nginx.gateway.svc:3100/loki/api/v1/push\")\n\ttraces_endpoint
+    \ = coalesce(env(\"TRACES_ENDPOINT\"), \"http://nginx.gateway.svc:4317\")\n}\n\notelcol.exporter.loki
     \"otlp_to_loki\" {\n\tforward_to = [provider.self_hosted_stack.kubernetes.logs_receiver]\n}\n\notelcol.exporter.prometheus
     \"otlp_to_prom\" {\n\tforward_to = [provider.self_hosted_stack.kubernetes.metrics_receiver]\n}\n\nimport.file
     \"metrics\" {\n\tfilename = \"/etc/alloy/modules/kubernetes/metrics\"\n}\n\nmetrics.integrations_scrape
@@ -154,10 +154,10 @@ data:
     \"k6_metrics\" {\n\tforward_to = [provider.self_hosted_stack.kubernetes.metrics_receiver]\n}\n\nimport.file
     \"jobs\" {\n\tfilename = \"/etc/alloy/modules/kubernetes/jobs\"\n}\n\njobs.receive_otlp_telemetry
     \"default\" {\n\tmetrics_forward_to = [otelcol.exporter.prometheus.otlp_to_prom.input]\n\tlogs_forward_to
-    \   = [otelcol.exporter.loki.otlp_to_loki.input]\n\ttraces_forward_to  = [provider.self_hosted_stack.kubernetes.traces_receiver]\n}\n\n"
+    \   = [otelcol.exporter.loki.otlp_to_loki.input]\n\ttraces_forward_to  = [provider.self_hosted_stack.kubernetes.traces_receiver]\n}\n"
 kind: ConfigMap
 metadata:
-  name: alloy-config-97258m2bcc
+  name: alloy-config-gk9k2bkbf7
   namespace: galah-monitoring
 ---
 apiVersion: v1
@@ -595,9 +595,10 @@ data:
     \"0.0.0.0:4318\")\n\t\t\tmetrics_url_path = coalesce(argument.metrics_url_path.value,
     \"/v1/metrics\")\n\t\t\tlogs_url_path    = coalesce(argument.logs_url_path.value,
     \"/v1/logs\")\n\t\t\ttraces_url_path  = coalesce(argument.traces_url_path.value,
-    \"/v1/traces\")\n\t\t}\n\t\t*/\n\t\thttp { }\n\n\t\tgrpc { }\n\n\t\toutput {\n\t\t\tmetrics
-    = concat(argument.metrics_forward_to.value, [otelcol.exporter.debug.otlp_collector.input])\n\t\t\tlogs
-    \   = argument.logs_forward_to.value\n\t\t\ttraces  = argument.traces_forward_to.value\n\t\t}\n\t}\n}\n"
+    \"/v1/traces\")\n\t\t}\n\t\t*/\n\t\thttp { }\n\n\t\tgrpc {\n\t\t    endpoint =
+    \"0.0.0.0:4317\"\n\t\t}\n\n\t\toutput {\n\t\t\tmetrics = concat(argument.metrics_forward_to.value,
+    [otelcol.exporter.debug.otlp_collector.input])\n\t\t\tlogs    = argument.logs_forward_to.value\n\t\t\ttraces
+    \ = argument.traces_forward_to.value\n\t\t}\n\t}\n}\n"
   prometheus-collector.alloy: "declare \"prometheus_collector\" {\n\targument \"listen_address\"
     {\n\t\toptional = true\n\t\tdefault  = \"\"\n\t}\n\n\targument \"listen_port\"
     {\n\t\toptional = true\n\t\tdefault  = 9009\n\t}\n\n\targument \"forward_to\"
@@ -614,7 +615,7 @@ data:
     {\n\t\t\ttraces = argument.forward_to.value\n\t\t}\n\t}\n}\n"
 kind: ConfigMap
 metadata:
-  name: alloy-modules-kubernetes-collectors-d99d49b8t5
+  name: alloy-modules-kubernetes-collectors-97d5k265c7
   namespace: galah-monitoring
 ---
 apiVersion: v1
@@ -639,7 +640,7 @@ data:
     \ = argument.traces_forward_to.value\n\t\t}\n\t}\n\n\totelcol.processor.memory_limiter
     \"default\" {\n\t\tcheck_interval         = \"1s\"\n\t\tlimit_percentage       =
     50\n\t\tspike_limit_percentage = 25\n\n\t\toutput {\n\t\t\tmetrics = [otelcol.processor.batch.default.input,
-    otelcol.exporter.debug.jobs_otlp.input,]\n\t\t\tlogs    = [otelcol.processor.batch.default.input]\n\t\t\ttraces
+    otelcol.exporter.debug.jobs_otlp.input]\n\t\t\tlogs    = [otelcol.processor.batch.default.input]\n\t\t\ttraces
     \ = [otelcol.processor.batch.default.input]\n\t\t}\n\t}\n\n\timport.file \"collectors\"
     {\n\t\tfilename = \"/etc/alloy/modules/kubernetes/collectors\"\n\t}\n\n\tcollectors.otlp_collector
     \"otlp\" {\n\t\tmetrics_forward_to = [otelcol.processor.memory_limiter.default.input]\n\t\tlogs_forward_to
@@ -657,7 +658,7 @@ data:
     \  = argument.zipkin_endpoint.value\n\t}\n}\n"
 kind: ConfigMap
 metadata:
-  name: alloy-modules-kubernetes-jobs-fmb4tk6kc6
+  name: alloy-modules-kubernetes-jobs-m2gbt5h6ck
   namespace: galah-monitoring
 ---
 apiVersion: v1
@@ -1254,6 +1255,10 @@ spec:
     port: 4326
     protocol: TCP
     targetPort: 4326
+  - name: grpc-chirp
+    port: 4319
+    protocol: TCP
+    targetPort: 4319
   selector:
     app.kubernetes.io/instance: alloy
     app.kubernetes.io/name: alloy
@@ -1323,6 +1328,10 @@ spec:
     port: 4326
     protocol: TCP
     targetPort: 4326
+  - name: grpc-chirp
+    port: 4319
+    protocol: TCP
+    targetPort: 4319
   publishNotReadyAddresses: true
   selector:
     app.kubernetes.io/instance: alloy
@@ -1420,6 +1429,9 @@ spec:
         - containerPort: 4326
           name: k6-http
           protocol: TCP
+        - containerPort: 4319
+          name: grpc-chirp
+          protocol: TCP
         readinessProbe:
           httpGet:
             path: /-/ready
@@ -1471,7 +1483,7 @@ spec:
       serviceAccountName: alloy
       volumes:
       - configMap:
-          name: alloy-config-97258m2bcc
+          name: alloy-config-gk9k2bkbf7
         name: config
       - configMap:
           name: alloy-modules-kubernetes-metrics-2c8kg5bffh
@@ -1483,7 +1495,7 @@ spec:
           name: alloy-modules-kubernetes-traces-6ct58987ht
         name: modules-kubernetes-traces
       - configMap:
-          name: alloy-modules-kubernetes-jobs-fmb4tk6kc6
+          name: alloy-modules-kubernetes-jobs-m2gbt5h6ck
         name: modules-kubernetes-jobs
       - configMap:
           name: alloy-modules-integrations-h754dg99ch
@@ -1492,7 +1504,7 @@ spec:
           name: alloy-modules-integrations-kubernetes-kf762t8df8
         name: modules-integrations-kubernetes
       - configMap:
-          name: alloy-modules-kubernetes-collectors-d99d49b8t5
+          name: alloy-modules-kubernetes-collectors-97d5k265c7
         name: modules-kubernetes-collectors
       - configMap:
           name: alloy-modules-kubernetes-provider-bhb9bm922h

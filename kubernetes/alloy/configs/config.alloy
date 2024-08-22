@@ -16,8 +16,8 @@ otelcol.exporter.debug "default" { }
 
 provider.self_hosted_stack "kubernetes" {
 	metrics_endpoint = coalesce(env("METRICS_ENDPOINT"), "http://nginx.gateway.svc:9090/api/v1/push")
-	logs_endpoint    = coalesce(env("LOGS_ENDPOINT"), "http://nginx.gateway.svc.cluster.local:3100/loki/api/v1/push")
-	traces_endpoint  = coalesce(env("TRACES_ENDPOINT"), "http://nginx.gateway.svc.cluster.local:3205")
+	logs_endpoint    = coalesce(env("LOGS_ENDPOINT"), "http://nginx.gateway.svc:3100/loki/api/v1/push")
+	traces_endpoint  = coalesce(env("TRACES_ENDPOINT"), "http://nginx.gateway.svc:4317")
 }
 
 otelcol.exporter.loki "otlp_to_loki" {
