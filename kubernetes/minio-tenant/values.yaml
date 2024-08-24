@@ -33,6 +33,8 @@ tenant:
     - name: mimir-alertmanager
     - name: loki-data
     - name: loki-ruler
+    - name: loki-admin
+    - name: loki-chunks
     - name: tempo-data
 
   users:
