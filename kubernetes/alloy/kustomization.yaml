@@ -10,6 +10,9 @@ helmCharts:
     includeCRDs: false
     valuesFile: values.yaml
 
+resources:
+  - namespace.yaml
+
 
 configMapGenerator:
   - name: alloy-config

@@ -1,4 +1,9 @@
 apiVersion: v1
+kind: Namespace
+metadata:
+  name: galah-monitoring
+---
+apiVersion: v1
 kind: ServiceAccount
 metadata:
   labels:
@@ -639,10 +644,9 @@ data:
     argument.metrics_forward_to.value\n\t\t\tlogs    = argument.logs_forward_to.value\n\t\t\ttraces
     \ = argument.traces_forward_to.value\n\t\t}\n\t}\n\n\totelcol.processor.memory_limiter
     \"default\" {\n\t\tcheck_interval         = \"1s\"\n\t\tlimit_percentage       =
-    50\n\t\tspike_limit_percentage = 25\n\n\t\toutput {\n\t\t\tmetrics = [otelcol.processor.batch.default.input,
-    otelcol.exporter.debug.jobs_otlp.input]\n\t\t\tlogs    = [otelcol.processor.batch.default.input]\n\t\t\ttraces
-    \ = [otelcol.processor.batch.default.input]\n\t\t}\n\t}\n\n\timport.file \"collectors\"
-    {\n\t\tfilename = \"/etc/alloy/modules/kubernetes/collectors\"\n\t}\n\n\tcollectors.otlp_collector
+    50\n\t\tspike_limit_percentage = 25\n\n\t\toutput {\n\t\t\tmetrics = [otelcol.processor.batch.default.input]\n\t\t\tlogs
+    \   = [otelcol.processor.batch.default.input]\n\t\t\ttraces  = [otelcol.processor.batch.default.input]\n\t\t}\n\t}\n\n\timport.file
+    \"collectors\" {\n\t\tfilename = \"/etc/alloy/modules/kubernetes/collectors\"\n\t}\n\n\tcollectors.otlp_collector
     \"otlp\" {\n\t\tmetrics_forward_to = [otelcol.processor.memory_limiter.default.input]\n\t\tlogs_forward_to
     \   = [otelcol.processor.memory_limiter.default.input]\n\t\ttraces_forward_to
     \ = [otelcol.processor.memory_limiter.default.input]\n\t\tgrpc_endpoint      =
@@ -658,7 +662,7 @@ data:
     \  = argument.zipkin_endpoint.value\n\t}\n}\n"
 kind: ConfigMap
 metadata:
-  name: alloy-modules-kubernetes-jobs-m2gbt5h6ck
+  name: alloy-modules-kubernetes-jobs-k2489g9gbk
   namespace: galah-monitoring
 ---
 apiVersion: v1
@@ -1495,7 +1499,7 @@ spec:
           name: alloy-modules-kubernetes-traces-6ct58987ht
         name: modules-kubernetes-traces
       - configMap:
-          name: alloy-modules-kubernetes-jobs-m2gbt5h6ck
+          name: alloy-modules-kubernetes-jobs-k2489g9gbk
         name: modules-kubernetes-jobs
       - configMap:
           name: alloy-modules-integrations-h754dg99ch
