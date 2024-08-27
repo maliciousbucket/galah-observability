@@ -103,6 +103,9 @@ manifests-kube-state-metrics: $(KUSTOMIZE) ## Generate Kube State Metrics CRD ma
 manifests-tempo-helm: $(KUSTOMIZE) ## Generate Tempo manifests using the Helm Chart
 	$(KUSTOMIZE) build --enable-helm kubernetes/tempo/helm > kubernetes/tempo/helm/manifests/config.yaml
 
+manifests-loki-helm: $(KUSTOMIZE)
+	$(KUSTOMIZE) build --enable-helm kubernetes/loki/helm > kubernetes/loki/helm/manifests/config.yaml
+
 ## Etc
 
 manifests-chirp:
@@ -155,15 +158,33 @@ deploy-tempo-helm: ## Deploy Tempo using the Helm Chart configuration
 	@kubectl apply -f kubernetes/tempo/helm/manifests/config.yaml
 	@kubectl rollout status -n galah-tracing statefulset/tempo
 
+delete-tempo-helm: ## Delete  Tempo and the Tempo Operator
+	@kubectl delete --ignore-not-found -f kubernetes/tempo/helm/manifests/config.yaml
+
 .PHONY: deploy-mimir
 deploy-mimir: ## Deploy Mimir
 	@kubectl apply -f kubernetes/mimir/manifests/config.yaml
 	@kubectl rollout status -n galah-monitoring deployment/mimir --watch --timeout=300s
 
+delete-mimir: ## Delete Mimir
+	@kubectl delete --ignore-not-found -f kubernetes/mimir/manifests/config.yaml
+
 .PHONY: deploy-loki
 deploy-loki: ## Deploy Loki
 	@kubectl apply -f kubernetes/loki/manifests/config.yaml
 	@kubectl rollout status -n galah-logging statefulset/loki --watch --timeout=300s
+
+delete-loki:
+	@kubectl delete --ignore-not-found -f kubernetes/loki/manifests/config.yaml
+
+deploy-loki-helm:
+	@kubectl apply -f kubernetes/loki/helm/manifests/config.yaml
+	@kubectl rollout status -n galah-logging service/helm-loki
+
+delete-loki-helm:
+	@kubectl delete --ignore-not-found -f kubernetes/loki/helm/manifests/config.yaml
+
+
 
 .PHONY: deploy-monitoring
 deploy-monitoring: deploy-gateway deploy-minio deploy-grafana deploy-mimir deploy-loki deploy-tempo-helm deploy-alloy ## Deploy monitoring infrastructure
