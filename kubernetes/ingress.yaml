@@ -16,3 +16,10 @@ spec:
                   number: 12345
             pathType: Prefix
             path: "/"
+          - path: /grafana
+            pathType: Prefix
+            backend:
+              service:
+                name: grafana
+                port:
+                  number: 3000
