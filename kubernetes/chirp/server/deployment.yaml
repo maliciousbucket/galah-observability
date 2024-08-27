@@ -23,6 +23,8 @@ spec:
 #            - TODO: serve prom metrics on seperate port
             - containerPort: 7080
               name: http
+            - containerPort: 80
+              name: entry
           resources:
             requests:
               cpu: 50m

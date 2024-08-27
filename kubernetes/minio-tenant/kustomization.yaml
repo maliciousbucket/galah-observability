@@ -8,7 +8,7 @@ helmCharts:
     releaseName: tenant
     namespace: minio-store
     includeCRDs: false
-    valuesFile: k3d-values.yaml
+    valuesFile: values.yaml
 
 resources:
   - configs/cert.yaml

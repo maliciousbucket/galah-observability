@@ -209,8 +209,10 @@ spec:
         ports:
         - containerPort: 3205
           name: grpc
+          protocol: TCP
         - containerPort: 3200
           name: http-metrics
+          protocol: TCP
         - containerPort: 3100
           name: prom-metrics
         - containerPort: 6831

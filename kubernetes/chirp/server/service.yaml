@@ -12,5 +12,9 @@ spec:
       name: http
       targetPort: http
       protocol: TCP
+    - port: 80
+      name: entry
+      protocol: TCP
+      targetPort: entry
   selector:
     app.kubernetes.io/name: chirp-server

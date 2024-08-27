@@ -23,10 +23,11 @@ if proceed_or_not "Print token to terminal?"; then
 fi
 
 eval "kubectl get secret admin-user -n kubernetes-dashboard -o jsonpath={'.data.token'} | base64 -d > secure.txt"
+echo ""
 echo "Token is available in secure.txt (I am passionate about security)"
 
 step "Opening port for dashboard access"
-
+#Watch rollout instead?
 sleep 20
 
 success "Login to the dashboard at (https://localhost:8443)"

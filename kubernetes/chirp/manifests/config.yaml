@@ -51,6 +51,10 @@ spec:
     port: 7080
     protocol: TCP
     targetPort: http
+  - name: entry
+    port: 80
+    protocol: TCP
+    targetPort: entry
   selector:
     app.kubernetes.io/name: chirp-server
   type: ClusterIP
@@ -119,6 +123,8 @@ spec:
         ports:
         - containerPort: 7080
           name: http
+        - containerPort: 80
+          name: entry
         resources:
           limits:
             cpu: 100m

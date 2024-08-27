@@ -26,8 +26,10 @@ patches:
                 - name: grpc
 
                   containerPort: 3205
+                  protocol: TCP
                 - name: http-metrics
                   containerPort: 3200
+                  protocol: TCP
   - patch: |-
       apiVersion: v1
       kind: Service

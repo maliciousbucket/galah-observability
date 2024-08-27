@@ -6,7 +6,7 @@ services:
   alloy:
     labels:
       logs.grafana.com/log-format: logfmt
-    image: ${ALLOY_IMAGE:-docker.io/grafana/alloy:v1.3.0}
+    image: ${ALLOY_IMAGE:-docker.io/grafana/alloy:v1.3.1}
     configs:
       - source: alloy_config_file
         target: /etc/alloy/config.alloy
