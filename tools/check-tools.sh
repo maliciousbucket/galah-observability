@@ -10,8 +10,17 @@ KUSTOMIZE="$BIN_DIR/kustomize"
 K3D="$BIN_DIR/k3d"
 
 source "$CURR_DIR/util/common.sh"
+source "$CURR_DIR/check-command.sh"
 
 section "Checking Tools"
+
+step "Checking kubectl is installed"
+
+check_command "kubectl" "https://kubernetes.io/docs/tasks/tools/install-kubectl/"
+
+step "Checking helm is installed"
+
+check_command "helm" "https://helm.sh/docs/intro/install/"
 
 step "Locating Kustomize"
 

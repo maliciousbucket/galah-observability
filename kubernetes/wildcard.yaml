@@ -1,0 +1,51 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: galah-ingress
+  namespace: galah-monitoring
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: galah.alloy
+      http:
+        paths:
+          - pathType: Prefix
+            path: /
+            backend:
+              service:
+                name: alloy
+                port:
+                  number: 12345
+    - host: galah.grafana
+      http:
+        paths:
+            - pathType: Prefix
+              path: /
+              backend:
+                service:
+                  name: grafana
+                  port:
+                    number: 3000
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: argocd-server-ingress
+  namespace: argocd
+  annotations:
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: galah.argo
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: argocd-server
+                port:
+                  name: https

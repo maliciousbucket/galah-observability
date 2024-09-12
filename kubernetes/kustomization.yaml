@@ -14,3 +14,4 @@ resources:
   - ./minio-tenant
   - ./prom-operator-crds
   - ./tempo/helm
+  - ./wildcard.yaml
