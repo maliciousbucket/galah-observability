@@ -17,6 +17,7 @@ $(LOCALBIN):
 
 ## Tool Binaries
 KUBECTL ?= kubectl
+HELM ?= helm
 K3D ?= $(LOCALBIN)/k3d
 KUSTOMIZE ?= $(LOCALBIN)/kustomize
 
@@ -189,6 +190,19 @@ delete-loki-helm:
 .PHONY: deploy-monitoring
 deploy-monitoring: deploy-gateway deploy-minio deploy-grafana deploy-mimir deploy-loki deploy-tempo-helm deploy-alloy ## Deploy monitoring infrastructure
 
+
+##@ CRDS
+
+.PHONY: install-prom-operator-crds
+install-prom-operator-crds: ## Install the Prom operator CRDs
+	@kubectl create -f kubernetes/prom-operator-crds/manifests/config.yaml
+
+.PHONY: install-kube-state-metrics-crds
+install-kube-state-metrics-crds: ## Install the Kube State Metrics CRDs
+	@kubectl create -f kubernetes/kube-state-metrics/manifests/config.yaml
+.PHONY: install-cert-manager-crds
+install-cert-manager-crds: ## Install the Cert Manger operator CRDs
+	@kubectl create -f kubernetes/cert-manager/manifests/config.yaml
 
 ##@ Other
 
