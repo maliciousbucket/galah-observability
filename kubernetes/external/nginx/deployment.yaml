@@ -1,0 +1,58 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  namespace: external
+  labels:
+    app: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+        - name: nginx
+          image: nginx
+          imagePullPolicy: IfNotPresent
+          #TODO Secret Generator from env
+          envFrom:
+            - configMapRef:
+                name: nginx-env
+                optional: true
+          ports:
+            - containerPort: 12345
+              name: http-alloy
+            - containerPort: 85
+              name: http-argocd
+          volumeMounts:
+            - mountPath: /etc/nginx/templates
+              name: templates
+          resources:
+            requests:
+              cpu: 10m
+              memory: 10Mi
+            limits:
+              cpu: 250m
+              memory: 128Mi
+      terminationGracePeriodSeconds: 60
+      volumes:
+        - name: templates
+          projected:
+            sources:
+              - configMap:
+                  name: nginx-conf
+              - configMap:
+                  name: nginx-templates
+        - name: entry-scripts
+          emptyDir:
+            {}
+#        - name: configmap-scripts
+#          configMap:
+#            name: nginx-entry-scripts
+#            defaultMode: 0777

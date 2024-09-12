@@ -1,0 +1,27 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+replicas:
+  - name: nginx
+    count: 1
+
+resources:
+  - namespace.yaml
+  - nginx/deployment.yaml
+
+images:
+  - name: nginx
+    newName: nginxinc/nginx-unprivileged
+    newTag: 1.27-alpine
+configMapGenerator:
+- name: nginx-conf
+  namespace: external
+  files:
+      - nginx.conf.template=nginx/nginx.conf
+- name: nginx-templates
+  namespace: external
+  options:
+    disableNameSuffixHash: true
+  files:
+    - gateway_alloy.conf.template=nginx/gateway_alloy.conf
+    - gateway_argo.conf.template=nginx/gateway_argo.conf

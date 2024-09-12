@@ -15,7 +15,7 @@ spec:
                 port:
                   number: 12345
             pathType: Prefix
-            path: "/"
+            path: /
           - path: /grafana
             pathType: Prefix
             backend:

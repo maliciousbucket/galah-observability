@@ -24,7 +24,7 @@ data:
 
       client_max_body_size  4M;
 
-      proxy_read_timeout    600; ## 10 minutes
+      proxy_read_timeout    600;
       proxy_send_timeout    600;
       proxy_connect_timeout 600;
 
@@ -47,7 +47,6 @@ data:
 
       resolver kube-dns.kube-system.svc.cluster.local;
 
-      # Ensure that X-Scope-OrgID is always present, default to the no_auth_tenant for backwards compatibility when multi-tenancy was turned off.
       map $http_x_scope_orgid $ensured_x_scope_orgid {
         default $http_x_scope_orgid;
         "" "anonymous";
@@ -59,7 +58,7 @@ data:
     }
 kind: ConfigMap
 metadata:
-  name: nginx-conf-t7d7g2fmgb
+  name: nginx-conf-mfdm49kc72
   namespace: gateway
 ---
 apiVersion: v1
@@ -342,6 +341,13 @@ data:
           proxy_pass      http://${LOKI_QUERY_FRONTEND_HOST}:3100$request_uri;
         }
     }
+kind: ConfigMap
+metadata:
+  name: nginx-loki-template
+  namespace: gateway
+---
+apiVersion: v1
+data:
   gateway_mimir.conf.template: |-
     server {
         listen 9090;
@@ -430,6 +436,13 @@ data:
 
 
     }
+kind: ConfigMap
+metadata:
+  name: nginx-mimir-template
+  namespace: gateway
+---
+apiVersion: v1
+data:
   gateway_tempo.conf.template: |-
     upstream grpc_tempo {
         server ${TEMPO_DISTRIBUTOR_HOST}:3205;
@@ -550,8 +563,7 @@ data:
     }
 kind: ConfigMap
 metadata:
-  name: nginx-templates
-  namespace: gateway
+  name: nginx-tempo-template
 ---
 apiVersion: v1
 kind: Service
@@ -641,9 +653,13 @@ spec:
         projected:
           sources:
           - configMap:
-              name: nginx-conf-t7d7g2fmgb
+              name: nginx-conf-mfdm49kc72
           - configMap:
-              name: nginx-templates
+              name: nginx-mimir-tempalte
+          - configMap:
+              name: nginx-loki-template
+          - configMap:
+              name: nginx-temp-template
       - emptyDir: {}
         name: entry-scripts
       - configMap:

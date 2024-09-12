@@ -1,0 +1,94 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: external
+---
+apiVersion: v1
+data:
+  nginx.conf.template: |2
+
+
+
+    server {
+        listen 12345;
+
+        location /alloy {
+          proxy_pass http://alloy.galah-monitoring.svc.cluster.local;
+        }
+
+
+    }
+
+    server {
+        listen 85;
+
+        location /argo {
+                proxy_pass http://argocd-helm-server.argocd.svc.cluster.local;
+        }
+
+    }
+kind: ConfigMap
+metadata:
+  name: nginx-conf-tc86hfk56b
+  namespace: external
+---
+apiVersion: v1
+data:
+  gateway_alloy.conf.template: ""
+  gateway_argo.conf.template: ""
+kind: ConfigMap
+metadata:
+  name: nginx-templates
+  namespace: external
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: nginx
+  name: nginx
+  namespace: external
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - envFrom:
+        - configMapRef:
+            name: nginx-env
+            optional: true
+        image: nginxinc/nginx-unprivileged:1.27-alpine
+        imagePullPolicy: IfNotPresent
+        name: nginx
+        ports:
+        - containerPort: 12345
+          name: http-alloy
+        - containerPort: 85
+          name: http-argocd
+        resources:
+          limits:
+            cpu: 250m
+            memory: 128Mi
+          requests:
+            cpu: 10m
+            memory: 10Mi
+        volumeMounts:
+        - mountPath: /etc/nginx/templates
+          name: templates
+      terminationGracePeriodSeconds: 60
+      volumes:
+      - name: templates
+        projected:
+          sources:
+          - configMap:
+              name: nginx-conf-tc86hfk56b
+          - configMap:
+              name: nginx-templates
+      - emptyDir: {}
+        name: entry-scripts
