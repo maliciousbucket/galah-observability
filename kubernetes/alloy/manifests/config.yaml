@@ -1560,7 +1560,7 @@ spec:
             name: alloy
             port:
               number: 12345
-        path: /
+        path: /alloy
         pathType: Prefix
   - host: alloy.local
     http:
@@ -1570,7 +1570,7 @@ spec:
             name: alloy
             port:
               number: 12345
-        path: /
+        path: /alloy
         pathType: Prefix
   - host: alloy.galah-monitoring.svc.cluster
     http:
@@ -1580,5 +1580,5 @@ spec:
             name: alloy
             port:
               number: 12345
-        path: /
+        path: /alloy
         pathType: Prefix

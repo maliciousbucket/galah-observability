@@ -42,6 +42,7 @@ This compose project is used for testing the Alloy Kubernetes configurations and
 
 #### Loki
 
+[//]: # (TODO: Adjust in alloy)
 > [!NOTE]
 > Logs sent over GRPC should be targeted at the [OTLP_GRPC endpoint](#otlp)
 

@@ -128,6 +128,7 @@ controller:
 ingress:
   enabled: true
   faroPort: 12345
+  path: /alloy
   hosts:
     - alloy.localhost
     - alloy.local

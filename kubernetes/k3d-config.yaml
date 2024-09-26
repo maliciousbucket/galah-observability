@@ -8,14 +8,24 @@ agents: 2
 kubeAPI:
   hostIP: "127.0.0.1"
   hostPort: "6445"
-image: rancher/k3s:v1.30.4-k3s1
+image: rancher/k3s:v1.30.5-k3s1
 ports:
-  - port: 8080:80
+#  - port: 8080:80
+#    nodeFilters:
+#      - loadbalancer
+  - port: 80:80
     nodeFilters:
       - loadbalancer
-  - port: 8081:80 # same as `--port '8080:81@loadbalancer'`
+  - port: 8083:80 # same as `--port '8080:81@loadbalancer'`
     nodeFilters:
       - loadbalancer
+
+
+#  - port: 8081:80
+#    nodeFilters:
+#      - loadbalancer
+
+
 #  - port: 8443:443
 #    nodeFilters:
 #      - loadbalancer
@@ -63,6 +73,17 @@ registries:
         endpoint:
         - http://host.k3d.internal:5000
         - http://k3d-reg-docker-io:5000
+    
+    
+
+#hostAliases:
+#  - ip: 127.0.0.1
+#    hostnames:
+#      - host.local
+#      - galah.local
+#      - galah.alloy
+#      - galah.grafana
+#      - alloy.local
 options:
   k3d:
     wait: true
@@ -78,6 +99,9 @@ options:
       - arg: --tls-san=127.0.0.1
         nodeFilters:
           - server:*
-    nodeLabels: []
+#      - arg: -p "30000-32767:30000-32767"
+#        nodeFilters:
+#            - server:0
+#    nodeLabels: []
 
 
