@@ -4,7 +4,7 @@ namespace: galah-monitoring
 helmCharts:
   - name: alloy
     repo: https://grafana.github.io/helm-charts
-    version: 0.6.0
+    version: 0.8.1
     releaseName: alloy
     namespace: galah-monitoring
     includeCRDs: false
@@ -49,6 +49,9 @@ configMapGenerator:
     namespace: galah-monitoring
     files:
     - configs/alloy-modules/kubernetes/jobs/receive-otlp-telemetry.alloy
+    - configs/alloy-modules/kubernetes/jobs/receive-k6.alloy
+    - configs/alloy-modules/kubernetes/jobs/kubernetes-scrape.alloy
+    - configs/alloy-modules/kubernetes/jobs/testbed-scrape.alloy
 
   - name: alloy-modules-integrations
     namespace: galah-monitoring
@@ -67,6 +70,7 @@ configMapGenerator:
     - configs/alloy-modules/kubernetes/integrations/kubernetes/kube-resources.alloy
     - configs/alloy-modules/kubernetes/integrations/kubernetes/kube-state-metrics.alloy
     - configs/alloy-modules/kubernetes/integrations/kubernetes/kubelet.alloy
+    - configs/alloy-modules/kubernetes/integrations/kubernetes/probes.alloy
 
   - name: alloy-modules-kubernetes-collectors
     namespace: galah-monitoring

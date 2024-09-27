@@ -18,11 +18,11 @@ declare "k6_collector" {
 
 	otelcol.receiver.otlp "k6" {
 		grpc {
-			endpoint = coalesce(argument.grpc_endpoint.value, "0.0.0.0:4320")
+			endpoint = coalesce(argument.grpc_endpoint.value, "0.0.0.0:4325")
 		}
 
 		http {
-			endpoint = coalesce(argument.http_endpoint.value, "0.0.0.0:4322")
+			endpoint = coalesce(argument.http_endpoint.value, "0.0.0.0:4326")
 		}
 
 		output {

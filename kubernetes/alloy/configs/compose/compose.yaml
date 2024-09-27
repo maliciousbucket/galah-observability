@@ -34,6 +34,16 @@ services:
       - ../alloy-modules/kubernetes/metrics/servicemonitors.alloy:/etc/alloy/modules/kubernetes/metrics/servicemonitors.alloy
 
       - ../alloy-modules/kubernetes/jobs/receive-otlp-telemetry.alloy:/etc/alloy/modules/kubernetes/jobs/receive-otlp-telemetry.alloy
+      - ../alloy-modules/kubernetes/jobs/receive-k6.alloy:/etc/alloy/modules/kubernetes/jobs/receive-k6.alloy
+      - ../alloy-modules/kubernetes/jobs/kubernetes-scrape.alloy:/etc/alloy/modules/kubernetes/jobs/kubernetes-scrape.alloy
+      - ../alloy-modules/kubernetes/jobs/testbed-scrape.alloy/etc/alloy/modules/kubernetes/jobs/testbed-scrape.alloy
+
+
+      - ../alloy-modules/kubernetes/integrations/kubernetes/api-server.alloy:/etc/alloy/modules/kubernetes/kubernetes/api-server.alloy
+      - ../alloy-modules/kubernetes/integrations/kubernetes/kube-resources.alloy:/etc/alloy/modules/kubernetes/kubernetes/kube-resources.alloy
+      - ../alloy-modules/kubernetes/integrations/kubernetes/kube-state-metrics.alloy:/etc/alloy/modules/kubernetes/kubernetes/kube-state-metrics.alloy
+      - ../alloy-modules/kubernetes/integrations/kubernetes/kubelet.alloy:/etc/alloy/modules/kubernetes/kubernetes/kubelet.alloy
+      - ../alloy-modules/kubernetes/integrations/kubernetes/probes.alloy:/etc/alloy/modules/kubernetes/kubernetes/probes.alloy
 
 
       - ../alloy-modules/provider/self_hosted.alloy:/etc/alloy/modules/provider/self_hosted.alloy

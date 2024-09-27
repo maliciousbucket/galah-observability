@@ -1,0 +1,86 @@
+declare "kubernetes_scrape" {
+	argument "forward_to" {
+		optional = false
+	}
+
+	argument "namespaces" {
+		optional = true
+		default  = []
+	}
+
+	argument "kube_resource_namespaces" {
+		optional = true
+		default  = ["galah-testbed"]
+	}
+
+	/*
+
+	argument "keep_kube_state_metrics" {
+		optional = true
+	}
+
+	argument "drop_kube_state_metrics" {
+		optional = true
+	}
+
+	*/
+
+	argument "keep_kube_resources" {
+		optional = true
+	}
+
+	argument "drop_kube_resources" {
+		optional = true
+	}
+
+	argument "keep_kubelet" {
+		optional = true
+	}
+
+	argument "drop_kubelet" {
+		optional = true
+	}
+
+	argument "keep_api_server" {
+		optional = true
+	}
+
+	argument "drop_api_server" {
+		optional = true
+	}
+	/*
+	import.file "kube_state_metrics" {
+		filename = "/etc/alloy/modules/kubernetes/kubernetes/kube-state-metrics.alloy"
+	}
+
+	kube_state_metrics.integrations_scrape_kube_state_metrics "kube_state_metrics" {
+	    forward_to = argument.forward_to.value
+	}
+
+	*/
+
+	import.file "kube_resources" {
+		filename = "/etc/alloy/modules/kubernetes/kubernetes/kube-resources.alloy"
+	}
+
+	kube_resources.integrations_scrape_kube_resources "kube_resources" {
+		forward_to = argument.forward_to.value
+		namespaces = argument.kube_resource_namespaces.value
+	}
+
+	import.file "kubelet" {
+		filename = "/etc/alloy/modules/kubernetes/kubernetes/kubelet.alloy"
+	}
+
+	kubelet.integrations_scrape_kubelet "kubelet" {
+		forward_to = argument.forward_to.value
+	}
+
+	import.file "api_server" {
+		filename = "/etc/alloy/modules/kubernetes/kubernetes/api-server.alloy"
+	}
+
+	apiServer.integrations_scrape_apiserver "api_server" {
+		forward_to = argument.forward_to.value
+	}
+}

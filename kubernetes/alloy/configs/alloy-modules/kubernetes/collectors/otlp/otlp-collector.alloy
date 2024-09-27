@@ -64,7 +64,7 @@ declare "otlp_collector" {
 		http { }
 
 		grpc {
-		    endpoint = "0.0.0.0:4317"
+			endpoint = "0.0.0.0:4317"
 		}
 
 		output {

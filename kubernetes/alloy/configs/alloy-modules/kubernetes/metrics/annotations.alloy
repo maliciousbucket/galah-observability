@@ -25,7 +25,6 @@ declare "annotations_scrape" {
 		optional = true
 	}
 
-	argument "cluster" { }
 	//TODO: Check "annotation_prefix"
 	argument "annotation_prefix" {
 		comment  = "The annotation_prefix to use (default: metrics.grafana.com)"
@@ -293,13 +292,6 @@ declare "annotations_scrape" {
 			action       = "replace"
 			replacement  = "kubernetes"
 			target_label = "source"
-		}
-
-		// set the cluster label
-		rule {
-			action       = "replace"
-			replacement  = argument.cluster.value
-			target_label = "cluster"
 		}
 
 		// set the namespace label

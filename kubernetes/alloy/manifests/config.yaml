@@ -12,8 +12,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: alloy
     app.kubernetes.io/part-of: alloy
-    app.kubernetes.io/version: v1.3.0
-    helm.sh/chart: alloy-0.6.0
+    app.kubernetes.io/version: v1.4.1
+    helm.sh/chart: alloy-0.8.1
   name: alloy
   namespace: galah-monitoring
 ---
@@ -26,8 +26,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: alloy
     app.kubernetes.io/part-of: alloy
-    app.kubernetes.io/version: v1.3.0
-    helm.sh/chart: alloy-0.6.0
+    app.kubernetes.io/version: v1.4.1
+    helm.sh/chart: alloy-0.8.1
   name: alloy
 rules:
 - apiGroups:
@@ -130,8 +130,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: alloy
     app.kubernetes.io/part-of: alloy
-    app.kubernetes.io/version: v1.3.0
-    helm.sh/chart: alloy-0.6.0
+    app.kubernetes.io/version: v1.4.1
+    helm.sh/chart: alloy-0.8.1
   name: alloy
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -155,14 +155,15 @@ data:
     \"otlp_to_prom\" {\n\tforward_to = [provider.self_hosted_stack.kubernetes.metrics_receiver]\n}\n\nimport.file
     \"metrics\" {\n\tfilename = \"/etc/alloy/modules/kubernetes/metrics\"\n}\n\nmetrics.integrations_scrape
     \"kubernetes\" {\n\tforward_to = [provider.self_hosted_stack.kubernetes.metrics_receiver]\n}\n\nimport.file
-    \"k6\" {\n\tfilename = \"/etc/alloy/modules/kubernetes/collectors/k6-collector.alloy\"\n}\n\nk6.k6_collector
-    \"k6_metrics\" {\n\tforward_to = [provider.self_hosted_stack.kubernetes.metrics_receiver]\n}\n\nimport.file
     \"jobs\" {\n\tfilename = \"/etc/alloy/modules/kubernetes/jobs\"\n}\n\njobs.receive_otlp_telemetry
     \"default\" {\n\tmetrics_forward_to = [otelcol.exporter.prometheus.otlp_to_prom.input]\n\tlogs_forward_to
-    \   = [otelcol.exporter.loki.otlp_to_loki.input]\n\ttraces_forward_to  = [provider.self_hosted_stack.kubernetes.traces_receiver]\n}\n"
+    \   = [otelcol.exporter.loki.otlp_to_loki.input]\n\ttraces_forward_to  = [provider.self_hosted_stack.kubernetes.traces_receiver]\n}\n\njobs.receive_k6
+    \"default\" {\n\tforward_to = [provider.self_hosted_stack.kubernetes.metrics_receiver]\n}\n\njobs.kubernetes_scrape
+    \"default\" {\n\tforward_to = [provider.self_hosted_stack.kubernetes.metrics_receiver]\n}\n\njobs.testbed_scrape
+    \"testbed\" {\n\tforward_to = [provider.self_hosted_stack.kubernetes.metrics_receiver]\n}\n"
 kind: ConfigMap
 metadata:
-  name: alloy-config-gk9k2bkbf7
+  name: alloy-config-5c9mdcmhtf
   namespace: galah-monitoring
 ---
 apiVersion: v1
@@ -544,9 +545,23 @@ data:
     only metrics that match the keep_metrics regex\n\t\trule {\n\t\t\tsource_labels
     = [\"__name__\"]\n\t\t\tregex         = coalesce(argument.keep_metrics.value,
     \"(.+)\")\n\t\t\taction        = \"keep\"\n\t\t}\n\t}\n}\n"
+  probes.alloy: "declare \"integrations_scrape_probes\" {\n\targument \"forward_to\"
+    {\n\t\toptional = false\n\t}\n\n\targument \"namespaces\" {\n\t\toptional = true\n\t\tdefault
+    \ = [\"galah_testbed\"]\n\t}\n\n\targument \"drop_metrics\" {\n\t\toptional =
+    true\n\t}\n\n\targument \"keep_metrics\" {\n\t\toptional = true\n\t}\n\n\targument
+    \"max_cache_size\" {\n\t\toptional = true\n\t}\n\n\tprometheus.operator.probes
+    \"probes\" {\n\t\tforward_to = argument.forward_to.value\n\t\tnamespaces = argument.namespaces.value\n\n\t\trule
+    {\n\t\t\tsource_labels = [\"__name__\"]\n\t\t\tregex         = coalesce(argument.drop_metrics.value,
+    \"(^(go|process)_.+$)\")\n\t\t\taction        = \"drop\"\n\t\t}\n\n\t\trule {\n\t\t\tsource_labels
+    = [\"__name__\"]\n\t\t\tregex         = coalesce(argument.keep_metrics.value,
+    \"(.+)\")\n\t\t\taction        = \"keep\"\n\t\t}\n\n\t\trule {\n\t\t\tsource_labels
+    = [\"__meta_kubernetes_node_name\"]\n\t\t\ttarget_label  = \"node\"\n\t\t}\n\n\t\trule
+    {\n\t\t\taction        = \"replace\"\n\t\t\tsource_labels = [\n\t\t\t\t\"__meta_kubernetes_node_label_app_kubernetes_io_name\",\n\t\t\t\t\"__meta_kubernetes_node_label_k8s_app\",\n\t\t\t\t\"__meta_kubernetes_node_label_app\",\n\t\t\t]\n\t\t\tseparator
+    \   = \";\"\n\t\t\tregex        = \"^(?:;*)?([^;]+).*$\"\n\t\t\treplacement  =
+    \"$1\"\n\t\t\ttarget_label = \"app\"\n\t\t}\n\t}\n}\n"
 kind: ConfigMap
 metadata:
-  name: alloy-modules-integrations-kubernetes-kf762t8df8
+  name: alloy-modules-integrations-kubernetes-t66mhh7hbt
   namespace: galah-monitoring
 ---
 apiVersion: v1
@@ -569,8 +584,8 @@ data:
     \"grpc_endpoint\" {\n\t\toptional = true\n\t}\n\n\totelcol.exporter.prometheus
     \"k6\" {\n\t\tforward_to          = argument.forward_to.value\n\t\tadd_metric_suffixes
     = false\n\t}\n\n\totelcol.receiver.otlp \"k6\" {\n\t\tgrpc {\n\t\t\tendpoint =
-    coalesce(argument.grpc_endpoint.value, \"0.0.0.0:4320\")\n\t\t}\n\n\t\thttp {\n\t\t\tendpoint
-    = coalesce(argument.http_endpoint.value, \"0.0.0.0:4322\")\n\t\t}\n\n\t\toutput
+    coalesce(argument.grpc_endpoint.value, \"0.0.0.0:4325\")\n\t\t}\n\n\t\thttp {\n\t\t\tendpoint
+    = coalesce(argument.http_endpoint.value, \"0.0.0.0:4326\")\n\t\t}\n\n\t\toutput
     {\n\t\t\tmetrics = [otelcol.exporter.prometheus.k6.input]\n\t\t}\n\t}\n}\n"
   loki-collector.alloy: "declare \"loki_collector\" {\n\targument \"forward_to\" {\n\t\toptional
     = true\n\t}\n\n\targument \"listen_address\" {\n\t\toptional = true\n\t\tdefault
@@ -600,10 +615,9 @@ data:
     \"0.0.0.0:4318\")\n\t\t\tmetrics_url_path = coalesce(argument.metrics_url_path.value,
     \"/v1/metrics\")\n\t\t\tlogs_url_path    = coalesce(argument.logs_url_path.value,
     \"/v1/logs\")\n\t\t\ttraces_url_path  = coalesce(argument.traces_url_path.value,
-    \"/v1/traces\")\n\t\t}\n\t\t*/\n\t\thttp { }\n\n\t\tgrpc {\n\t\t    endpoint =
-    \"0.0.0.0:4317\"\n\t\t}\n\n\t\toutput {\n\t\t\tmetrics = concat(argument.metrics_forward_to.value,
-    [otelcol.exporter.debug.otlp_collector.input])\n\t\t\tlogs    = argument.logs_forward_to.value\n\t\t\ttraces
-    \ = argument.traces_forward_to.value\n\t\t}\n\t}\n}\n"
+    \"/v1/traces\")\n\t\t}\n\t\t*/\n\t\thttp { }\n\n\t\tgrpc {\n\t\t\tendpoint = \"0.0.0.0:4317\"\n\t\t}\n\n\t\toutput
+    {\n\t\t\tmetrics = concat(argument.metrics_forward_to.value, [otelcol.exporter.debug.otlp_collector.input])\n\t\t\tlogs
+    \   = argument.logs_forward_to.value\n\t\t\ttraces  = argument.traces_forward_to.value\n\t\t}\n\t}\n}\n"
   prometheus-collector.alloy: "declare \"prometheus_collector\" {\n\targument \"listen_address\"
     {\n\t\toptional = true\n\t\tdefault  = \"\"\n\t}\n\n\targument \"listen_port\"
     {\n\t\toptional = true\n\t\tdefault  = 9009\n\t}\n\n\targument \"forward_to\"
@@ -620,11 +634,36 @@ data:
     {\n\t\t\ttraces = argument.forward_to.value\n\t\t}\n\t}\n}\n"
 kind: ConfigMap
 metadata:
-  name: alloy-modules-kubernetes-collectors-97d5k265c7
+  name: alloy-modules-kubernetes-collectors-bb5m62mkmh
   namespace: galah-monitoring
 ---
 apiVersion: v1
 data:
+  kubernetes-scrape.alloy: "declare \"kubernetes_scrape\" {\n\targument \"forward_to\"
+    {\n\t\toptional = false\n\t}\n\n\targument \"namespaces\" {\n\t\toptional = true\n\t\tdefault
+    \ = []\n\t}\n\n\targument \"kube_resource_namespaces\" {\n\t\toptional = true\n\t\tdefault
+    \ = [\"galah-testbed\"]\n\t}\n\n\t/*\n\n\targument \"keep_kube_state_metrics\"
+    {\n\t\toptional = true\n\t}\n\n\targument \"drop_kube_state_metrics\" {\n\t\toptional
+    = true\n\t}\n\n\t*/\n\n\targument \"keep_kube_resources\" {\n\t\toptional = true\n\t}\n\n\targument
+    \"drop_kube_resources\" {\n\t\toptional = true\n\t}\n\n\targument \"keep_kubelet\"
+    {\n\t\toptional = true\n\t}\n\n\targument \"drop_kubelet\" {\n\t\toptional = true\n\t}\n\n\targument
+    \"keep_api_server\" {\n\t\toptional = true\n\t}\n\n\targument \"drop_api_server\"
+    {\n\t\toptional = true\n\t}\n\t/*\n\timport.file \"kube_state_metrics\" {\n\t\tfilename
+    = \"/etc/alloy/modules/kubernetes/kubernetes/kube-state-metrics.alloy\"\n\t}\n\n\tkube_state_metrics.integrations_scrape_kube_state_metrics
+    \"kube_state_metrics\" {\n\t    forward_to = argument.forward_to.value\n\t}\n\n\t*/\n\n\timport.file
+    \"kube_resources\" {\n\t\tfilename = \"/etc/alloy/modules/kubernetes/kubernetes/kube-resources.alloy\"\n\t}\n\n\tkube_resources.integrations_scrape_kube_resources
+    \"kube_resources\" {\n\t\tforward_to = argument.forward_to.value\n\t\tnamespaces
+    = argument.kube_resource_namespaces.value\n\t}\n\n\timport.file \"kubelet\" {\n\t\tfilename
+    = \"/etc/alloy/modules/kubernetes/kubernetes/kubelet.alloy\"\n\t}\n\n\tkubelet.integrations_scrape_kubelet
+    \"kubelet\" {\n\t\tforward_to = argument.forward_to.value\n\t}\n\n\timport.file
+    \"api_server\" {\n\t\tfilename = \"/etc/alloy/modules/kubernetes/kubernetes/api-server.alloy\"\n\t}\n\n\tapiServer.integrations_scrape_apiserver
+    \"api_server\" {\n\t\tforward_to = argument.forward_to.value\n\t}\n}\n"
+  receive-k6.alloy: "declare \"receive_k6\" {\n\targument \"forward_to\" {\n\t\toptional
+    = false\n\t}\n\n\targument \"grpc_endpoint\" {\n\t\toptional = true\n\t}\n\n\targument
+    \"http_endpoint\" {\n\t\toptional = true\n\t}\n\n\timport.file \"collector\" {\n\t\tfilename
+    = \"etc/alloy/kubernetes/collectors/k6-collector.alloy\"\n\t}\n\n\tcollector.k6_collector
+    \"k6\" {\n\t\tforward_to    = argument.forward_to.value\n\t\tgrpc_endpoint = coalesce(env(\"K6_GRPC_ENDPOINT\"),
+    \"0.0.0.0:4325\")\n\t\thttp_endpoint = coalesce(env(\"K6_HTTP_ENDPOINT\"), \"0.0.0.0:4326\")\n\t}\n}\n"
   receive-otlp-telemetry.alloy: "declare \"receive_otlp_telemetry\" {\n\targument
     \"metrics_forward_to\" {\n\t\toptional = false\n\t}\n\n\targument \"logs_forward_to\"
     {\n\t\toptional = false\n\t}\n\n\targument \"traces_forward_to\" {\n\t\toptional
@@ -660,9 +699,28 @@ data:
     = argument.jaeger_thrift_compact_endpoint.value\n\t}\n\n\tcollectors.zipkin_collector
     \"zipkin\" {\n\t\tforward_to = [otelcol.processor.memory_limiter.default.input]\n\t\tendpoint
     \  = argument.zipkin_endpoint.value\n\t}\n}\n"
+  testbed-scrape.alloy: "declare \"testbed_scrape\" {\n\targument \"forward_to\" {\n\t\toptional
+    = false\n\t}\n\n\targument \"namespaces\" {\n\t\toptional = true\n\t\tdefault
+    \ = [\"galah_testbed\"]\n\t}\n\n\targument \"field_selectors\" {\n\t\toptional
+    = true\n\t}\n\n\targument \"label_selectors\" {\n\t\toptional = true\n\t}\n\n\targument
+    \"annotation\" {\n\t\toptional = true\n\t\tdefault  = \"galah-monitoring.io\"\n\t}\n\n\targument
+    \"__sd_annotation\" {\n\t\toptional = true\n\t\tdefault  = replace(replace(replace(coalesce(argument.annotation_prefix.value,
+    \"galah-monitoring.io\"), \".\", \"_\"), \"/\", \"_\"), \"-\", \"_\")\n\t}\n\n\targument
+    \"keep_metrics\" {\n\t\toptional = true\n\t}\n\n\targument \"drop_metrics\" {\n\t\toptional
+    = true\n\t}\n\n\targument \"clustering\" {\n\t\toptional = true\n\t}\n\n\targument
+    \"scrape_port_named_metrics\" {\n\t\tcomment  = \"Whether or not to automatically
+    scrape endpoints that have a port with 'metrics' in the name\"\n\t\toptional =
+    true\n\t\tdefault  = false\n\t}\n\n\timport.file \"annotations\" {\n\t\tfilename
+    = \"/etc/alloy/modules/kubernetes/metrics/annotations.alloy\"\n\t}\n\n\tannotations.annotations_scrape
+    \"testbed_scrape\" {\n\t\tforward_to                = argument.forward_to.value\n\t\tnamespaces
+    \               = argument.namespaces.value\n\t\tfield_selectors           = argument.field_selectors.value\n\t\tlabel_selectors
+    \          = argument.label_selectors.value\n\t\tannotation_prefix         = argument.annotation.value\n\t\t__sd_annotation
+    \          = argument.__sd_annotation.value\n\t\tscrape_port_named_metrics = true\n\t\tkeep_metrics
+    \             = argument.keep_metrics.value\n\t\tdrop_metrics              = argument.drop_metrics.value\n\t\tclustering
+    \               = argument.clustering.value\n\t}\n}\n"
 kind: ConfigMap
 metadata:
-  name: alloy-modules-kubernetes-jobs-k2489g9gbk
+  name: alloy-modules-kubernetes-jobs-5ttmt7dm4h
   namespace: galah-monitoring
 ---
 apiVersion: v1
@@ -873,40 +931,40 @@ data:
     = true\n\t}\n\n\targument \"tenant\" {\n\t\tcomment  = \"The tenant to filter
     metrics to.  This does not have to be the tenantId, this is the value to look
     for in the metrics.agent.grafana.com/tenant annotation, and this can be a regex.\"\n\t\toptional
-    = true\n\t}\n\n\targument \"cluster\" { }\n\t//TODO: Check \"annotation_prefix\"\n\targument
-    \"annotation_prefix\" {\n\t\tcomment  = \"The annotation_prefix to use (default:
-    metrics.grafana.com)\"\n\t\tdefault  = \"metrics.grafana.com\"\n\t\toptional =
-    true\n\t}\n\n\targument \"role\" {\n\t\tcomment  = \"The role to use when looking
-    for targets to scrape via annotations, can be: endpoints, service, pod (default:
-    endpoints)\"\n\t\toptional = true\n\t}\n\n\targument \"__sd_annotation\" {\n\t\toptional
-    = true\n\t\tcomment  = \"The logic is used to transform the annotation argument
-    into a valid label name by removing unsupported characters.\"\n\t\tdefault  =
-    replace(replace(replace(coalesce(argument.annotation_prefix.value, \"metrics.grafana.com\"),
-    \".\", \"_\"), \"/\", \"_\"), \"-\", \"_\")\n\t}\n\n\targument \"__pod_role\"
-    {\n\t\tcomment  = \"Most annotation targets service or pod that is all you want,
-    however if the role is endpoints you want the pod\"\n\t\toptional = true\n\t\tdefault
-    \ = replace(coalesce(argument.role.value, \"endpoints\"), \"endpoints\", \"pod\")\n\t}\n\n\targument
-    \"__service_role\" {\n\t\tcomment  = \"Most annotation targets service or pod
-    that is all you want, however if the role is endpoints you we also want to consider
-    service annotations\"\n\t\toptional = true\n\t\tdefault  = replace(coalesce(argument.role.value,
-    \"endpoints\"), \"endpoints\", \"service\")\n\t}\n\n\targument \"scrape_port_named_metrics\"
-    {\n\t\tcomment  = \"Whether or not to automatically scrape endpoints that have
-    a port with 'metrics' in the name\"\n\t\toptional = true\n\t\tdefault  = false\n\t}\n\n\targument
-    \"keep_metrics\" {\n\t\tcomment  = \"A regex of metrics to keep (default: (.+))\"\n\t\toptional
-    = true\n\t}\n\n\targument \"drop_metrics\" {\n\t\tcomment  = \"A regex of metrics
-    to drop (default: \\\"\\\")\"\n\t\toptional = true\n\t}\n\n\targument \"scrape_interval\"
-    {\n\t\tcomment  = \"How often to scrape metrics from the targets (default: 60s)\"\n\t\toptional
-    = true\n\t}\n\n\targument \"scrape_timeout\" {\n\t\tcomment  = \"How long before
-    a scrape times out (default: 10s)\"\n\t\toptional = true\n\t}\n\n\targument \"clustering\"
-    {\n\t\tcomment  = \"Whether or not clustering should be enabled for http targets
-    (default: false)\"\n\t\toptional = true\n\t}\n\n\tdiscovery.kubernetes \"annotation_metrics\"
-    {\n\t\trole = coalesce(argument.role.value, \"endpoints\")\n\n\t\tselectors {\n\t\t\trole
-    \ = coalesce(argument.role.value, \"endpoints\")\n\t\t\tfield = join(coalesce(argument.field_selectors.value,
-    []), \",\")\n\t\t\tlabel = join(coalesce(argument.label_selectors.value, []),
-    \",\")\n\t\t}\n\n\t\tnamespaces {\n\t\t\tnames = coalesce(arguments.namespaces.value,
-    [])\n\t\t}\n\t}\n\n\t// filter metrics by kubernetes annotations\n\tdiscovery.relabel
-    \"annotation_metrics_filter\" {\n\t\ttargets = discovery.kubernetes.annotation_metrics.targets\n\n\t\t//
-    allow resources to declare their metrics scraped or not\n\t\t// Example Annotation:\n\t\t//
+    = true\n\t}\n\n\t//TODO: Check \"annotation_prefix\"\n\targument \"annotation_prefix\"
+    {\n\t\tcomment  = \"The annotation_prefix to use (default: metrics.grafana.com)\"\n\t\tdefault
+    \ = \"metrics.grafana.com\"\n\t\toptional = true\n\t}\n\n\targument \"role\" {\n\t\tcomment
+    \ = \"The role to use when looking for targets to scrape via annotations, can
+    be: endpoints, service, pod (default: endpoints)\"\n\t\toptional = true\n\t}\n\n\targument
+    \"__sd_annotation\" {\n\t\toptional = true\n\t\tcomment  = \"The logic is used
+    to transform the annotation argument into a valid label name by removing unsupported
+    characters.\"\n\t\tdefault  = replace(replace(replace(coalesce(argument.annotation_prefix.value,
+    \"metrics.grafana.com\"), \".\", \"_\"), \"/\", \"_\"), \"-\", \"_\")\n\t}\n\n\targument
+    \"__pod_role\" {\n\t\tcomment  = \"Most annotation targets service or pod that
+    is all you want, however if the role is endpoints you want the pod\"\n\t\toptional
+    = true\n\t\tdefault  = replace(coalesce(argument.role.value, \"endpoints\"), \"endpoints\",
+    \"pod\")\n\t}\n\n\targument \"__service_role\" {\n\t\tcomment  = \"Most annotation
+    targets service or pod that is all you want, however if the role is endpoints
+    you we also want to consider service annotations\"\n\t\toptional = true\n\t\tdefault
+    \ = replace(coalesce(argument.role.value, \"endpoints\"), \"endpoints\", \"service\")\n\t}\n\n\targument
+    \"scrape_port_named_metrics\" {\n\t\tcomment  = \"Whether or not to automatically
+    scrape endpoints that have a port with 'metrics' in the name\"\n\t\toptional =
+    true\n\t\tdefault  = false\n\t}\n\n\targument \"keep_metrics\" {\n\t\tcomment
+    \ = \"A regex of metrics to keep (default: (.+))\"\n\t\toptional = true\n\t}\n\n\targument
+    \"drop_metrics\" {\n\t\tcomment  = \"A regex of metrics to drop (default: \\\"\\\")\"\n\t\toptional
+    = true\n\t}\n\n\targument \"scrape_interval\" {\n\t\tcomment  = \"How often to
+    scrape metrics from the targets (default: 60s)\"\n\t\toptional = true\n\t}\n\n\targument
+    \"scrape_timeout\" {\n\t\tcomment  = \"How long before a scrape times out (default:
+    10s)\"\n\t\toptional = true\n\t}\n\n\targument \"clustering\" {\n\t\tcomment  =
+    \"Whether or not clustering should be enabled for http targets (default: false)\"\n\t\toptional
+    = true\n\t}\n\n\tdiscovery.kubernetes \"annotation_metrics\" {\n\t\trole = coalesce(argument.role.value,
+    \"endpoints\")\n\n\t\tselectors {\n\t\t\trole  = coalesce(argument.role.value,
+    \"endpoints\")\n\t\t\tfield = join(coalesce(argument.field_selectors.value, []),
+    \",\")\n\t\t\tlabel = join(coalesce(argument.label_selectors.value, []), \",\")\n\t\t}\n\n\t\tnamespaces
+    {\n\t\t\tnames = coalesce(arguments.namespaces.value, [])\n\t\t}\n\t}\n\n\t//
+    filter metrics by kubernetes annotations\n\tdiscovery.relabel \"annotation_metrics_filter\"
+    {\n\t\ttargets = discovery.kubernetes.annotation_metrics.targets\n\n\t\t// allow
+    resources to declare their metrics scraped or not\n\t\t// Example Annotation:\n\t\t//
     \  metrics.grafana.com/scrape: false\n\t\t//\n\t\t// the label prometheus.io/service-monitor:
     \"false\" is a common label for headless services, when performing endpoint\n\t\t//
     service discovery, if there is both a load-balanced service and headless service,
@@ -999,10 +1057,8 @@ data:
     \   = \";\"\n\t\t\tregex        = \"^(?:;*)?(\\\\d+(s|m|ms|h|d)).*$\"\n\t\t\treplacement
     \ = \"$1\"\n\t\t\ttarget_label = \"__scrape_timeout__\"\n\t\t}\n\n\t\t//Common
     Labels\n\t\t// set a source label\n\t\trule {\n\t\t\taction       = \"replace\"\n\t\t\treplacement
-    \ = \"kubernetes\"\n\t\t\ttarget_label = \"source\"\n\t\t}\n\n\t\t// set the cluster
-    label\n\t\trule {\n\t\t\taction       = \"replace\"\n\t\t\treplacement  = argument.cluster.value\n\t\t\ttarget_label
-    = \"cluster\"\n\t\t}\n\n\t\t// set the namespace label\n\t\trule {\n\t\t\taction
-    \       = \"replace\"\n\t\t\tsource_labels = [\"__meta_kubernetes_namespace\"]\n\t\t\ttarget_label
+    \ = \"kubernetes\"\n\t\t\ttarget_label = \"source\"\n\t\t}\n\n\t\t// set the namespace
+    label\n\t\trule {\n\t\t\taction        = \"replace\"\n\t\t\tsource_labels = [\"__meta_kubernetes_namespace\"]\n\t\t\ttarget_label
     \ = \"namespace\"\n\t\t}\n\n\t\t// set the target name label i.e. service name,
     pod name, etc.\n\t\t// if the role is endpoints, the first valued field is used
     which would be __meta_kubernetes_pod_name, if the pod name is empty\n\t\t// then
@@ -1159,7 +1215,7 @@ data:
     coalesce(argument.keep_metrics.value, \"(.+)\")\n\t\t}\n\t}\n}\n"
 kind: ConfigMap
 metadata:
-  name: alloy-modules-kubernetes-metrics-2c8kg5bffh
+  name: alloy-modules-kubernetes-metrics-659bdb6g7d
   namespace: galah-monitoring
 ---
 apiVersion: v1
@@ -1204,14 +1260,15 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: alloy
     app.kubernetes.io/part-of: alloy
-    app.kubernetes.io/version: v1.3.0
-    helm.sh/chart: alloy-0.6.0
+    app.kubernetes.io/version: v1.4.1
+    helm.sh/chart: alloy-0.8.1
   name: alloy
   namespace: galah-monitoring
 spec:
   internalTrafficPolicy: Cluster
   ports:
   - name: http-metrics
+    nodePort: 31128
     port: 12345
     protocol: TCP
     targetPort: 12345
@@ -1266,7 +1323,7 @@ spec:
   selector:
     app.kubernetes.io/instance: alloy
     app.kubernetes.io/name: alloy
-  type: ClusterIP
+  type: NodePort
 ---
 apiVersion: v1
 kind: Service
@@ -1277,8 +1334,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: alloy
     app.kubernetes.io/part-of: alloy
-    app.kubernetes.io/version: v1.3.0
-    helm.sh/chart: alloy-0.6.0
+    app.kubernetes.io/version: v1.4.1
+    helm.sh/chart: alloy-0.8.1
   name: alloy-cluster
   namespace: galah-monitoring
 spec:
@@ -1350,8 +1407,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: alloy
     app.kubernetes.io/part-of: alloy
-    app.kubernetes.io/version: v1.3.0
-    helm.sh/chart: alloy-0.6.0
+    app.kubernetes.io/version: v1.4.1
+    helm.sh/chart: alloy-0.8.1
   name: alloy
   namespace: galah-monitoring
 spec:
@@ -1394,7 +1451,7 @@ spec:
         - secretRef:
             name: alloy-env
             optional: true
-        image: docker.io/grafana/alloy:v1.3.0
+        image: docker.io/grafana/alloy:v1.4.1
         imagePullPolicy: IfNotPresent
         name: alloy
         ports:
@@ -1487,10 +1544,10 @@ spec:
       serviceAccountName: alloy
       volumes:
       - configMap:
-          name: alloy-config-gk9k2bkbf7
+          name: alloy-config-5c9mdcmhtf
         name: config
       - configMap:
-          name: alloy-modules-kubernetes-metrics-2c8kg5bffh
+          name: alloy-modules-kubernetes-metrics-659bdb6g7d
         name: modules-kubernetes-metrics
       - configMap:
           name: alloy-modules-kubernetes-logs-b8k9846tf9
@@ -1499,16 +1556,16 @@ spec:
           name: alloy-modules-kubernetes-traces-6ct58987ht
         name: modules-kubernetes-traces
       - configMap:
-          name: alloy-modules-kubernetes-jobs-k2489g9gbk
+          name: alloy-modules-kubernetes-jobs-5ttmt7dm4h
         name: modules-kubernetes-jobs
       - configMap:
           name: alloy-modules-integrations-h754dg99ch
         name: modules-integrations
       - configMap:
-          name: alloy-modules-integrations-kubernetes-kf762t8df8
+          name: alloy-modules-integrations-kubernetes-t66mhh7hbt
         name: modules-integrations-kubernetes
       - configMap:
-          name: alloy-modules-kubernetes-collectors-97d5k265c7
+          name: alloy-modules-kubernetes-collectors-bb5m62mkmh
         name: modules-kubernetes-collectors
       - configMap:
           name: alloy-modules-kubernetes-provider-bhb9bm922h
@@ -1523,8 +1580,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: alloy
     app.kubernetes.io/part-of: alloy
-    app.kubernetes.io/version: v1.3.0
-    helm.sh/chart: alloy-0.6.0
+    app.kubernetes.io/version: v1.4.1
+    helm.sh/chart: alloy-0.8.1
   name: alloy
   namespace: galah-monitoring
 spec:
@@ -1546,13 +1603,13 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: alloy
     app.kubernetes.io/part-of: alloy
-    app.kubernetes.io/version: v1.3.0
-    helm.sh/chart: alloy-0.6.0
+    app.kubernetes.io/version: v1.4.1
+    helm.sh/chart: alloy-0.8.1
   name: alloy
   namespace: galah-monitoring
 spec:
   rules:
-  - host: alloy.localhost
+  - host: chart-example.local
     http:
       paths:
       - backend:
@@ -1560,25 +1617,5 @@ spec:
             name: alloy
             port:
               number: 12345
-        path: /alloy
-        pathType: Prefix
-  - host: alloy.local
-    http:
-      paths:
-      - backend:
-          service:
-            name: alloy
-            port:
-              number: 12345
-        path: /alloy
-        pathType: Prefix
-  - host: alloy.galah-monitoring.svc.cluster
-    http:
-      paths:
-      - backend:
-          service:
-            name: alloy
-            port:
-              number: 12345
-        path: /alloy
+        path: /
         pathType: Prefix

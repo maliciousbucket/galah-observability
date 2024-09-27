@@ -1,0 +1,57 @@
+declare "integrations_scrape_probes" {
+	argument "forward_to" {
+		optional = false
+	}
+
+	argument "namespaces" {
+		optional = true
+		default  = ["galah_testbed"]
+	}
+
+	argument "drop_metrics" {
+		optional = true
+	}
+
+	argument "keep_metrics" {
+		optional = true
+	}
+
+	argument "max_cache_size" {
+		optional = true
+	}
+
+	prometheus.operator.probes "probes" {
+		forward_to = argument.forward_to.value
+		namespaces = argument.namespaces.value
+
+		rule {
+			source_labels = ["__name__"]
+			regex         = coalesce(argument.drop_metrics.value, "(^(go|process)_.+$)")
+			action        = "drop"
+		}
+
+		rule {
+			source_labels = ["__name__"]
+			regex         = coalesce(argument.keep_metrics.value, "(.+)")
+			action        = "keep"
+		}
+
+		rule {
+			source_labels = ["__meta_kubernetes_node_name"]
+			target_label  = "node"
+		}
+
+		rule {
+			action        = "replace"
+			source_labels = [
+				"__meta_kubernetes_node_label_app_kubernetes_io_name",
+				"__meta_kubernetes_node_label_k8s_app",
+				"__meta_kubernetes_node_label_app",
+			]
+			separator    = ";"
+			regex        = "^(?:;*)?([^;]+).*$"
+			replacement  = "$1"
+			target_label = "app"
+		}
+	}
+}

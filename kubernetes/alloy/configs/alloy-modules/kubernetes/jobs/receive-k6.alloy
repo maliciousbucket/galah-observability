@@ -1,0 +1,23 @@
+declare "receive_k6" {
+	argument "forward_to" {
+		optional = false
+	}
+
+	argument "grpc_endpoint" {
+		optional = true
+	}
+
+	argument "http_endpoint" {
+		optional = true
+	}
+
+	import.file "collector" {
+		filename = "etc/alloy/kubernetes/collectors/k6-collector.alloy"
+	}
+
+	collector.k6_collector "k6" {
+		forward_to    = argument.forward_to.value
+		grpc_endpoint = coalesce(env("K6_GRPC_ENDPOINT"), "0.0.0.0:4325")
+		http_endpoint = coalesce(env("K6_HTTP_ENDPOINT"), "0.0.0.0:4326")
+	}
+}
