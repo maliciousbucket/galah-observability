@@ -36,14 +36,34 @@ metrics.integrations_scrape "kubernetes" {
 	forward_to = [provider.self_hosted_stack.kubernetes.metrics_receiver]
 }
 
+import.file "traces" {
+    filename = "/etc/alloy/modules/kubernetes/traces"
+}
+
+traces.filter_health "default" {
+    forward_to = provider.self_hosted_stack.kubernetes.traces_receiver
+}
+
 import.file "jobs" {
 	filename = "/etc/alloy/modules/kubernetes/jobs"
+}
+
+jobs.log_pipeline "default" {
+	forward_to = [provider.self_hosted_stack.kubernetes.logs_receiver]
+}
+
+jobs.k8s_log_pipeline "default" {
+	forward_to = [jobs.log_pipeline.default.receiver]
+}
+
+jobs.k8s_logs "default" {
+	forward_to = [jobs.k8s_log_pipeline.receiver]
 }
 
 jobs.receive_otlp_telemetry "default" {
 	metrics_forward_to = [otelcol.exporter.prometheus.otlp_to_prom.input]
 	logs_forward_to    = [otelcol.exporter.loki.otlp_to_loki.input]
-	traces_forward_to  = [provider.self_hosted_stack.kubernetes.traces_receiver]
+	traces_forward_to  = [traces.filter_health.default.receiver]
 }
 
 jobs.receive_k6 "default" {

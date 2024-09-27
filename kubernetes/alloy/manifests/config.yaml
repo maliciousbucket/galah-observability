@@ -155,15 +155,20 @@ data:
     \"otlp_to_prom\" {\n\tforward_to = [provider.self_hosted_stack.kubernetes.metrics_receiver]\n}\n\nimport.file
     \"metrics\" {\n\tfilename = \"/etc/alloy/modules/kubernetes/metrics\"\n}\n\nmetrics.integrations_scrape
     \"kubernetes\" {\n\tforward_to = [provider.self_hosted_stack.kubernetes.metrics_receiver]\n}\n\nimport.file
-    \"jobs\" {\n\tfilename = \"/etc/alloy/modules/kubernetes/jobs\"\n}\n\njobs.receive_otlp_telemetry
+    \"traces\" {\n    filename = \"/etc/alloy/modules/kubernetes/traces\"\n}\n\ntraces.filter_health
+    \"default\" {\n    forward_to = provider.self_hosted_stack.kubernetes.traces_receiver\n}\n\nimport.file
+    \"jobs\" {\n\tfilename = \"/etc/alloy/modules/kubernetes/jobs\"\n}\n\njobs.log_pipeline
+    \"default\" {\n\tforward_to = [provider.self_hosted_stack.kubernetes.logs_receiver]\n}\n\njobs.k8s_log_pipeline
+    \"default\" {\n\tforward_to = [jobs.log_pipeline.default.receiver]\n}\n\njobs.k8s_logs
+    \"default\" {\n\tforward_to = [jobs.k8s_log_pipeline.receiver]\n}\n\njobs.receive_otlp_telemetry
     \"default\" {\n\tmetrics_forward_to = [otelcol.exporter.prometheus.otlp_to_prom.input]\n\tlogs_forward_to
-    \   = [otelcol.exporter.loki.otlp_to_loki.input]\n\ttraces_forward_to  = [provider.self_hosted_stack.kubernetes.traces_receiver]\n}\n\njobs.receive_k6
+    \   = [otelcol.exporter.loki.otlp_to_loki.input]\n\ttraces_forward_to  = [traces.filter_health.default.receiver]\n}\n\njobs.receive_k6
     \"default\" {\n\tforward_to = [provider.self_hosted_stack.kubernetes.metrics_receiver]\n}\n\njobs.kubernetes_scrape
     \"default\" {\n\tforward_to = [provider.self_hosted_stack.kubernetes.metrics_receiver]\n}\n\njobs.testbed_scrape
     \"testbed\" {\n\tforward_to = [provider.self_hosted_stack.kubernetes.metrics_receiver]\n}\n"
 kind: ConfigMap
 metadata:
-  name: alloy-config-5c9mdcmhtf
+  name: alloy-config-fdhmffmbgh
   namespace: galah-monitoring
 ---
 apiVersion: v1
@@ -879,11 +884,11 @@ data:
     = argument.sampling_reason.value\n\t\t\t}\n\t\t}\n\t}\n}\n\ndeclare \"otlp_sampling\"
     { }\n"
   pods.alloy: "declare \"pod_logs\" {\n\targument \"forward_to\" {\n\t\tcomment =
-    \"Must be a list(LogReceiver) where the collected logs are forwarded to\"\n\t}\n\n\targument
-    \"cluster\" { }\n\n\tdiscovery.kubernetes \"pod\" {\n\t\trole = \"pod\"\n\t}\n\n\tdiscovery.relabel
-    \"pod_logs\" {\n\t\ttargets = discovery.kubernetes.pod.targets\n\n\t\trule {\n\t\t\tsource_labels
-    = [\"__meta_kubernetes_namespace\"]\n\t\t\taction        = \"replace\"\n\t\t\ttarget_label
-    \ = \"namespace\"\n\t\t}\n\n\t\trule {\n\t\t\tsource_labels = [\"__meta_kubernetes_pod_container_name\"]\n\t\t\taction
+    \"Must be a list(LogReceiver) where the collected logs are forwarded to\"\n\t}\n\n\tdiscovery.kubernetes
+    \"pod\" {\n\t\trole = \"pod\"\n\t}\n\n\tdiscovery.relabel \"pod_logs\" {\n\t\ttargets
+    = discovery.kubernetes.pod.targets\n\n\t\trule {\n\t\t\tsource_labels = [\"__meta_kubernetes_namespace\"]\n\t\t\taction
+    \       = \"replace\"\n\t\t\ttarget_label  = \"namespace\"\n\t\t}\n\n\t\trule
+    {\n\t\t\tsource_labels = [\"__meta_kubernetes_pod_container_name\"]\n\t\t\taction
     \       = \"replace\"\n\t\t\ttarget_label  = \"container\"\n\t\t}\n\n\t\trule
     {\n\t\t\tsource_labels = [\"__meta_kubernetes_pod_label_app_kubernetes_io_name\"]\n\t\t\taction
     \       = \"replace\"\n\t\t\ttarget_label  = \"app\"\n\t\t}\n\n\t\trule {\n\t\t\tsource_labels
@@ -896,8 +901,7 @@ data:
     \       = \"replace\"\n\t\t\ttarget_label  = \"container_runtime\"\n\t\t\tregex
     \        = \"^(\\\\S+):\\\\/\\\\/.+$\"\n\t\t\treplacement   = \"$1\"\n\t\t}\n\t}\n\n\tloki.source.kubernetes
     \"pod_logs\" {\n\t\ttargets    = discovery.relabel.pod_logs.output\n\t\tforward_to
-    = [loki.process.pod_logs.receiver]\n\t}\n\n\tloki.process \"pod_logs\" {\n\t\tstage.static_labels
-    {\n\t\t\tvalues = {\n\t\t\t\tcluster = argument.cluster.value,\n\t\t\t}\n\t\t}\n\t}\n}\n"
+    = argument.forward_to.value\n\t}\n}\n"
   relabel-with-level.alloy: "declare \"relabel_with_level\" {\n\targument \"forward_to\"
     {\n\t\tcomment = \"Must be a list(LogReceiver) where the collected logs are forwarded
     to\"\n\t}\n\n\tloki.process \"add_level\" {\n\t\tstage.logfmt {\n\t\t\tmapping
@@ -915,7 +919,7 @@ data:
     = \"helm_sh_chart\",\n\t\t\t\tpod        = \"pod\",\n\t\t\t})\n\t\t}\n\t}\n}\n"
 kind: ConfigMap
 metadata:
-  name: alloy-modules-kubernetes-logs-b8k9846tf9
+  name: alloy-modules-kubernetes-logs-kc9tggd8f7
   namespace: galah-monitoring
 ---
 apiVersion: v1
@@ -1544,13 +1548,13 @@ spec:
       serviceAccountName: alloy
       volumes:
       - configMap:
-          name: alloy-config-5c9mdcmhtf
+          name: alloy-config-fdhmffmbgh
         name: config
       - configMap:
           name: alloy-modules-kubernetes-metrics-659bdb6g7d
         name: modules-kubernetes-metrics
       - configMap:
-          name: alloy-modules-kubernetes-logs-b8k9846tf9
+          name: alloy-modules-kubernetes-logs-kc9tggd8f7
         name: modules-kubernetes-logs
       - configMap:
           name: alloy-modules-kubernetes-traces-6ct58987ht
