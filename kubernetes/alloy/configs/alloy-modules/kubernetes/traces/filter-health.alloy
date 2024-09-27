@@ -1,0 +1,21 @@
+declare "filter_health" {
+	argument "forward_to" {
+		optional = false
+	}
+
+	otelcol.processor.filter "health" {
+		error_mode = "ignore"
+
+		traces {
+			span = [
+				"attributes[\"http.route\"] == \"/live\"",
+				"attributes[\"http.route\"] == \"/healthy\"",
+				"attributes[\"http.route\"] == \"/ready\"",
+			]
+		}
+
+		output {
+			traces = argument.forward_to.value
+		}
+	}
+}

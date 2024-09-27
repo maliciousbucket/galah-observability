@@ -1,0 +1,25 @@
+declare "k8s_logs" {
+	argument "forward_to" {
+		optional = false
+	}
+
+	import.file "pods" {
+		filename = "/etc/alloy/modules/kubernetes/logs/pods.alloy"
+	}
+
+	pods.pod_logs "pods" {
+		forward_to = [pipeline.k8s_log_pipeline.k8s.receiver]
+	}
+
+	import.file "events" {
+		filename = "/etc/alloy/modules/kubernetes/logs/kubernetes-cluster-events.alloy"
+	}
+
+	import.file "pipeline" {
+		filename = "/etc/alloy/modules/kubernetes/jobs/log-pipeline.alloy"
+	}
+
+	pipeline.k8s_log_pipeline "k8s" {
+		forward_to = argument.forward_to.value
+	}
+}

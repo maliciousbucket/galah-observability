@@ -3,8 +3,6 @@ declare "pod_logs" {
 		comment = "Must be a list(LogReceiver) where the collected logs are forwarded to"
 	}
 
-	argument "cluster" { }
-
 	discovery.kubernetes "pod" {
 		role = "pod"
 	}
@@ -57,14 +55,6 @@ declare "pod_logs" {
 
 	loki.source.kubernetes "pod_logs" {
 		targets    = discovery.relabel.pod_logs.output
-		forward_to = [loki.process.pod_logs.receiver]
-	}
-
-	loki.process "pod_logs" {
-		stage.static_labels {
-			values = {
-				cluster = argument.cluster.value,
-			}
-		}
+		forward_to = argument.forward_to.value
 	}
 }

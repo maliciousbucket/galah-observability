@@ -1,0 +1,55 @@
+declare "log_pipeline" {
+	argument "forward_to" {
+		optional = false
+	}
+
+	argument "keep_labels" {
+		optional = true
+	}
+
+	export "receiver" {
+		value = relabel_levels.relabel_with_level.pipeline.receiver
+	}
+
+	import.file "relabel_levels" {
+		filename = "/etc/alloy/modules/kubernetes/logs/relabel-with-level.alloy"
+	}
+
+	relabel_levels.relabel_with_level "pipeline" {
+		forward_to = [metadata.structured_metadata.pipeline.receiver]
+	}
+
+	import.file "metadata" {
+		filename = "/etc/alloy/modules/kubernetes/logs/structured-metadata.alloy"
+	}
+
+	metadata.structured_metadata "pipeline" {
+		forward_to = [keep_labels.keep_labels.pipeline.receiver]
+	}
+
+	import.file "keep_labels" {
+		filename = "/etc/alloy/modules/kubernetes/logs/keep-labels.alloy"
+	}
+
+	keep_labels.keep_labels "pipeline" {
+		forward_to = argument.forward_to.value
+	}
+}
+
+declare "k8s_log_pipeline" {
+	argument "forward_to" {
+		optional = false
+	}
+
+	import.file "k8s_levels" {
+		filename = "/etc/alloy/modules/kubernetes/logs/kubernetes-default-level.alloy"
+	}
+
+	k8s_levels.default_level "k8s_levels" {
+		forward_to = argument.forward_to.value
+	}
+
+	export "logs_receiver" {
+		value = k8s_levels.default_level.k8s_levels.receiver
+	}
+}
