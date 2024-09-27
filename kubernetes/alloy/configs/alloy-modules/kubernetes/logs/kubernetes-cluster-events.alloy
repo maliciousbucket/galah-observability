@@ -21,11 +21,11 @@ declare "kubernetes_cluster_events" {
 		namespaces = coalesce(argument.namespaces.value, [])
 		job_name   = coalesce(argument.job_label.value, "integrations/kubernetes/eventhandler")
 		log_format = "logfmt"
-		forward_to = [loki.process.logs_service.receiver]
+		forward_to = [loki.process.process_cluster_events.receiver]
 	}
 
 	loki.process "process_cluster_events" {
-		stage.static.labels {
+		stage.static_labels {
 			values = {
 				cluster = argument.cluster.value,
 			}

@@ -23,7 +23,7 @@ declare "testbed_scrape" {
 
 	argument "__sd_annotation" {
 		optional = true
-		default  = replace(replace(replace(coalesce(argument.annotation_prefix.value, "galah-monitoring.io"), ".", "_"), "/", "_"), "-", "_")
+		default  = replace(replace(replace(coalesce(argument.annotation.value, "galah-monitoring.io"), ".", "_"), "/", "_"), "-", "_")
 	}
 
 	argument "keep_metrics" {

@@ -12,7 +12,7 @@ declare "receive_k6" {
 	}
 
 	import.file "collector" {
-		filename = "etc/alloy/kubernetes/collectors/k6-collector.alloy"
+		filename = "etc/alloy/modules/kubernetes/collectors/k6-collector.alloy"
 	}
 
 	collector.k6_collector "k6" {

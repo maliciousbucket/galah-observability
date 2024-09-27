@@ -19,7 +19,7 @@ declare "relabel_with_level" {
 		forward_to = argument.forward_to.value
 	}
 
-	export "logs_receiver" {
+	export "receiver" {
 		value = loki.process.add_level.receiver
 	}
 }

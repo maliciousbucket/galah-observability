@@ -49,7 +49,7 @@ declare "k8s_log_pipeline" {
 		forward_to = argument.forward_to.value
 	}
 
-	export "logs_receiver" {
+	export "receiver" {
 		value = k8s_levels.default_level.k8s_levels.receiver
 	}
 }

@@ -3,21 +3,25 @@ declare "k8s_logs" {
 		optional = false
 	}
 
+	argument "cluster" {
+	    optional = true
+	}
+
 	import.file "pods" {
 		filename = "/etc/alloy/modules/kubernetes/logs/pods.alloy"
 	}
 
 	pods.pod_logs "pods" {
-		forward_to = [argument.forward_to.value]
+		forward_to = argument.forward_to.value
 	}
 
 	import.file "events" {
 		filename = "/etc/alloy/modules/kubernetes/logs/kubernetes-cluster-events.alloy"
-
 	}
 
 	events.kubernetes_cluster_events "k8s_events" {
-        job_label = "integrations/kubernetes/events"
-        forward_to = argument.forward_to.value
+		job_label  = "integrations/kubernetes/events"
+		forward_to = argument.forward_to.value
+		cluster = coalesce(argument.cluster.value, "k3d-galah-monitoring")
 	}
 }

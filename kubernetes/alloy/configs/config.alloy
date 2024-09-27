@@ -37,11 +37,11 @@ metrics.integrations_scrape "kubernetes" {
 }
 
 import.file "traces" {
-    filename = "/etc/alloy/modules/kubernetes/traces"
+	filename = "/etc/alloy/modules/kubernetes/traces"
 }
 
 traces.filter_health "default" {
-    forward_to = provider.self_hosted_stack.kubernetes.traces_receiver
+	forward_to = [provider.self_hosted_stack.kubernetes.traces_receiver]
 }
 
 import.file "jobs" {
@@ -57,7 +57,7 @@ jobs.k8s_log_pipeline "default" {
 }
 
 jobs.k8s_logs "default" {
-	forward_to = [jobs.k8s_log_pipeline.receiver]
+	forward_to = [jobs.k8s_log_pipeline.default.receiver]
 }
 
 jobs.receive_otlp_telemetry "default" {

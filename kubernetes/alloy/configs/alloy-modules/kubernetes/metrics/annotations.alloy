@@ -96,7 +96,7 @@ declare "annotations_scrape" {
 		}
 
 		namespaces {
-			names = coalesce(arguments.namespaces.value, [])
+			names = coalesce(argument.namespaces.value, [])
 		}
 	}
 

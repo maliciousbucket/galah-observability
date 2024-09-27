@@ -65,7 +65,7 @@ declare "kubernetes_scrape" {
 
 	kube_resources.integrations_scrape_kube_resources "kube_resources" {
 		forward_to = argument.forward_to.value
-		namespaces = argument.kube_resource_namespaces.value
+		//namespaces = argument.kube_resource_namespaces.value
 	}
 
 	import.file "kubelet" {
@@ -80,7 +80,7 @@ declare "kubernetes_scrape" {
 		filename = "/etc/alloy/modules/kubernetes/kubernetes/api-server.alloy"
 	}
 
-	apiServer.integrations_scrape_apiserver "api_server" {
+	api_server.integrations_scrape_apiserver "api_server" {
 		forward_to = argument.forward_to.value
 	}
 }

@@ -27,6 +27,7 @@ configMapGenerator:
     - configs/alloy-modules/kubernetes/metrics/podmonitors.alloy
     - configs/alloy-modules/kubernetes/metrics/servicemonitors.alloy
     - configs/alloy-modules/kubernetes/metrics/integrations-scrape.alloy
+    - configs/alloy-modules/kubernetes/metrics/prom-metrics-filter.alloy
 
 
   - name: alloy-modules-kubernetes-logs
@@ -44,6 +45,8 @@ configMapGenerator:
 
   - name: alloy-modules-kubernetes-traces
     namespace: galah-monitoring
+    files:
+    - configs/alloy-modules/kubernetes/traces/filter-health.alloy
 
   - name: alloy-modules-kubernetes-jobs
     namespace: galah-monitoring
@@ -52,6 +55,8 @@ configMapGenerator:
     - configs/alloy-modules/kubernetes/jobs/receive-k6.alloy
     - configs/alloy-modules/kubernetes/jobs/kubernetes-scrape.alloy
     - configs/alloy-modules/kubernetes/jobs/testbed-scrape.alloy
+    - configs/alloy-modules/kubernetes/jobs/k8s-logs.alloy
+    - configs/alloy-modules/kubernetes/jobs/log-pipeline.alloy
 
   - name: alloy-modules-integrations
     namespace: galah-monitoring
@@ -81,6 +86,7 @@ configMapGenerator:
     - configs/alloy-modules/kubernetes/collectors/prometheus/prometheus-collector.alloy
     - configs/alloy-modules/kubernetes/collectors/zipkin/zipkin-collector.alloy
     - configs/alloy-modules/kubernetes/collectors/k6/k6-collector.alloy
+
 
 
   - name: alloy-modules-kubernetes-provider

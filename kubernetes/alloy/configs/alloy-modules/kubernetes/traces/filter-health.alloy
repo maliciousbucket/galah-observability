@@ -4,7 +4,7 @@ declare "filter_health" {
 	}
 
 	export "receiver" {
-	    value = otelcol.processor.filter.health.input
+		value = otelcol.processor.filter.health.input
 	}
 
 	otelcol.processor.filter "health" {

@@ -155,12 +155,12 @@ data:
     \"otlp_to_prom\" {\n\tforward_to = [provider.self_hosted_stack.kubernetes.metrics_receiver]\n}\n\nimport.file
     \"metrics\" {\n\tfilename = \"/etc/alloy/modules/kubernetes/metrics\"\n}\n\nmetrics.integrations_scrape
     \"kubernetes\" {\n\tforward_to = [provider.self_hosted_stack.kubernetes.metrics_receiver]\n}\n\nimport.file
-    \"traces\" {\n    filename = \"/etc/alloy/modules/kubernetes/traces\"\n}\n\ntraces.filter_health
-    \"default\" {\n    forward_to = provider.self_hosted_stack.kubernetes.traces_receiver\n}\n\nimport.file
+    \"traces\" {\n\tfilename = \"/etc/alloy/modules/kubernetes/traces\"\n}\n\ntraces.filter_health
+    \"default\" {\n\tforward_to = [provider.self_hosted_stack.kubernetes.traces_receiver]\n}\n\nimport.file
     \"jobs\" {\n\tfilename = \"/etc/alloy/modules/kubernetes/jobs\"\n}\n\njobs.log_pipeline
     \"default\" {\n\tforward_to = [provider.self_hosted_stack.kubernetes.logs_receiver]\n}\n\njobs.k8s_log_pipeline
     \"default\" {\n\tforward_to = [jobs.log_pipeline.default.receiver]\n}\n\njobs.k8s_logs
-    \"default\" {\n\tforward_to = [jobs.k8s_log_pipeline.receiver]\n}\n\njobs.receive_otlp_telemetry
+    \"default\" {\n\tforward_to = [jobs.k8s_log_pipeline.default.receiver]\n}\n\njobs.receive_otlp_telemetry
     \"default\" {\n\tmetrics_forward_to = [otelcol.exporter.prometheus.otlp_to_prom.input]\n\tlogs_forward_to
     \   = [otelcol.exporter.loki.otlp_to_loki.input]\n\ttraces_forward_to  = [traces.filter_health.default.receiver]\n}\n\njobs.receive_k6
     \"default\" {\n\tforward_to = [provider.self_hosted_stack.kubernetes.metrics_receiver]\n}\n\njobs.kubernetes_scrape
@@ -168,7 +168,7 @@ data:
     \"testbed\" {\n\tforward_to = [provider.self_hosted_stack.kubernetes.metrics_receiver]\n}\n"
 kind: ConfigMap
 metadata:
-  name: alloy-config-fdhmffmbgh
+  name: alloy-config-h9mk245cbf
   namespace: galah-monitoring
 ---
 apiVersion: v1
@@ -644,6 +644,13 @@ metadata:
 ---
 apiVersion: v1
 data:
+  k8s-logs.alloy: "declare \"k8s_logs\" {\n\targument \"forward_to\" {\n\t\toptional
+    = false\n\t}\n\n\targument \"cluster\" {\n\t    optional = true\n\t}\n\n\timport.file
+    \"pods\" {\n\t\tfilename = \"/etc/alloy/modules/kubernetes/logs/pods.alloy\"\n\t}\n\n\tpods.pod_logs
+    \"pods\" {\n\t\tforward_to = argument.forward_to.value\n\t}\n\n\timport.file \"events\"
+    {\n\t\tfilename = \"/etc/alloy/modules/kubernetes/logs/kubernetes-cluster-events.alloy\"\n\t}\n\n\tevents.kubernetes_cluster_events
+    \"k8s_events\" {\n\t\tjob_label  = \"integrations/kubernetes/events\"\n\t\tforward_to
+    = argument.forward_to.value\n\t\tcluster = coalesce(argument.cluster.value, \"k3d-galah-monitoring\")\n\t}\n}\n"
   kubernetes-scrape.alloy: "declare \"kubernetes_scrape\" {\n\targument \"forward_to\"
     {\n\t\toptional = false\n\t}\n\n\targument \"namespaces\" {\n\t\toptional = true\n\t\tdefault
     \ = []\n\t}\n\n\targument \"kube_resource_namespaces\" {\n\t\toptional = true\n\t\tdefault
@@ -657,16 +664,29 @@ data:
     = \"/etc/alloy/modules/kubernetes/kubernetes/kube-state-metrics.alloy\"\n\t}\n\n\tkube_state_metrics.integrations_scrape_kube_state_metrics
     \"kube_state_metrics\" {\n\t    forward_to = argument.forward_to.value\n\t}\n\n\t*/\n\n\timport.file
     \"kube_resources\" {\n\t\tfilename = \"/etc/alloy/modules/kubernetes/kubernetes/kube-resources.alloy\"\n\t}\n\n\tkube_resources.integrations_scrape_kube_resources
-    \"kube_resources\" {\n\t\tforward_to = argument.forward_to.value\n\t\tnamespaces
+    \"kube_resources\" {\n\t\tforward_to = argument.forward_to.value\n\t\t//namespaces
     = argument.kube_resource_namespaces.value\n\t}\n\n\timport.file \"kubelet\" {\n\t\tfilename
     = \"/etc/alloy/modules/kubernetes/kubernetes/kubelet.alloy\"\n\t}\n\n\tkubelet.integrations_scrape_kubelet
     \"kubelet\" {\n\t\tforward_to = argument.forward_to.value\n\t}\n\n\timport.file
-    \"api_server\" {\n\t\tfilename = \"/etc/alloy/modules/kubernetes/kubernetes/api-server.alloy\"\n\t}\n\n\tapiServer.integrations_scrape_apiserver
+    \"api_server\" {\n\t\tfilename = \"/etc/alloy/modules/kubernetes/kubernetes/api-server.alloy\"\n\t}\n\n\tapi_server.integrations_scrape_apiserver
     \"api_server\" {\n\t\tforward_to = argument.forward_to.value\n\t}\n}\n"
+  log-pipeline.alloy: "declare \"log_pipeline\" {\n\targument \"forward_to\" {\n\t\toptional
+    = false\n\t}\n\n\targument \"keep_labels\" {\n\t\toptional = true\n\t}\n\n\texport
+    \"receiver\" {\n\t\tvalue = relabel_levels.relabel_with_level.pipeline.receiver\n\t}\n\n\timport.file
+    \"relabel_levels\" {\n\t\tfilename = \"/etc/alloy/modules/kubernetes/logs/relabel-with-level.alloy\"\n\t}\n\n\trelabel_levels.relabel_with_level
+    \"pipeline\" {\n\t\tforward_to = [metadata.structured_metadata.pipeline.receiver]\n\t}\n\n\timport.file
+    \"metadata\" {\n\t\tfilename = \"/etc/alloy/modules/kubernetes/logs/structured-metadata.alloy\"\n\t}\n\n\tmetadata.structured_metadata
+    \"pipeline\" {\n\t\tforward_to = [keep_labels.keep_labels.pipeline.receiver]\n\t}\n\n\timport.file
+    \"keep_labels\" {\n\t\tfilename = \"/etc/alloy/modules/kubernetes/logs/keep-labels.alloy\"\n\t}\n\n\tkeep_labels.keep_labels
+    \"pipeline\" {\n\t\tforward_to = argument.forward_to.value\n\t}\n}\n\ndeclare
+    \"k8s_log_pipeline\" {\n\targument \"forward_to\" {\n\t\toptional = false\n\t}\n\n\timport.file
+    \"k8s_levels\" {\n\t\tfilename = \"/etc/alloy/modules/kubernetes/logs/kubernetes-default-level.alloy\"\n\t}\n\n\tk8s_levels.default_level
+    \"k8s_levels\" {\n\t\tforward_to = argument.forward_to.value\n\t}\n\n\texport
+    \"receiver\" {\n\t\tvalue = k8s_levels.default_level.k8s_levels.receiver\n\t}\n}\n"
   receive-k6.alloy: "declare \"receive_k6\" {\n\targument \"forward_to\" {\n\t\toptional
     = false\n\t}\n\n\targument \"grpc_endpoint\" {\n\t\toptional = true\n\t}\n\n\targument
     \"http_endpoint\" {\n\t\toptional = true\n\t}\n\n\timport.file \"collector\" {\n\t\tfilename
-    = \"etc/alloy/kubernetes/collectors/k6-collector.alloy\"\n\t}\n\n\tcollector.k6_collector
+    = \"etc/alloy/modules/kubernetes/collectors/k6-collector.alloy\"\n\t}\n\n\tcollector.k6_collector
     \"k6\" {\n\t\tforward_to    = argument.forward_to.value\n\t\tgrpc_endpoint = coalesce(env(\"K6_GRPC_ENDPOINT\"),
     \"0.0.0.0:4325\")\n\t\thttp_endpoint = coalesce(env(\"K6_HTTP_ENDPOINT\"), \"0.0.0.0:4326\")\n\t}\n}\n"
   receive-otlp-telemetry.alloy: "declare \"receive_otlp_telemetry\" {\n\targument
@@ -709,7 +729,7 @@ data:
     \ = [\"galah_testbed\"]\n\t}\n\n\targument \"field_selectors\" {\n\t\toptional
     = true\n\t}\n\n\targument \"label_selectors\" {\n\t\toptional = true\n\t}\n\n\targument
     \"annotation\" {\n\t\toptional = true\n\t\tdefault  = \"galah-monitoring.io\"\n\t}\n\n\targument
-    \"__sd_annotation\" {\n\t\toptional = true\n\t\tdefault  = replace(replace(replace(coalesce(argument.annotation_prefix.value,
+    \"__sd_annotation\" {\n\t\toptional = true\n\t\tdefault  = replace(replace(replace(coalesce(argument.annotation.value,
     \"galah-monitoring.io\"), \".\", \"_\"), \"/\", \"_\"), \"-\", \"_\")\n\t}\n\n\targument
     \"keep_metrics\" {\n\t\toptional = true\n\t}\n\n\targument \"drop_metrics\" {\n\t\toptional
     = true\n\t}\n\n\targument \"clustering\" {\n\t\toptional = true\n\t}\n\n\targument
@@ -725,7 +745,7 @@ data:
     \               = argument.clustering.value\n\t}\n}\n"
 kind: ConfigMap
 metadata:
-  name: alloy-modules-kubernetes-jobs-5ttmt7dm4h
+  name: alloy-modules-kubernetes-jobs-k7df8ckd98
   namespace: galah-monitoring
 ---
 apiVersion: v1
@@ -776,8 +796,8 @@ data:
     = false\n\t}\n\n\tloki.source.kubernetes_events \"cluster_events\" {\n\t\tnamespaces
     = coalesce(argument.namespaces.value, [])\n\t\tjob_name   = coalesce(argument.job_label.value,
     \"integrations/kubernetes/eventhandler\")\n\t\tlog_format = \"logfmt\"\n\t\tforward_to
-    = [loki.process.logs_service.receiver]\n\t}\n\n\tloki.process \"process_cluster_events\"
-    {\n\t\tstage.static.labels {\n\t\t\tvalues = {\n\t\t\t\tcluster = argument.cluster.value,\n\t\t\t}\n\t\t}\n\n\t\tstage.labels
+    = [loki.process.process_cluster_events.receiver]\n\t}\n\n\tloki.process \"process_cluster_events\"
+    {\n\t\tstage.static_labels {\n\t\t\tvalues = {\n\t\t\t\tcluster = argument.cluster.value,\n\t\t\t}\n\t\t}\n\n\t\tstage.labels
     {\n\t\t\tvalues = {\n\t\t\t\tkubernetes_cluster_events = \"job\",\n\t\t\t}\n\t\t}\n\t\tforward_to
     = argument.forward_to.value\n\t}\n}\n"
   kubernetes-default-level.alloy: "declare \"default_level\" {\n\targument \"forward_to\"
@@ -907,8 +927,7 @@ data:
     to\"\n\t}\n\n\tloki.process \"add_level\" {\n\t\tstage.logfmt {\n\t\t\tmapping
     = {\n\t\t\t\t\"extracted_level\" = \"level\",\n\t\t\t}\n\t\t}\n\n\t\tstage.labels
     {\n\t\t\tvalues = {\n\t\t\t\t\"level\" = \"extracted_level\",\n\t\t\t}\n\t\t}\n\n\t\tforward_to
-    = argument.forward_to.value\n\t}\n\n\texport \"logs_receiver\" {\n\t\tvalue =
-    loki.process.add_level.receiver\n\t}\n}\n"
+    = argument.forward_to.value\n\t}\n\n\texport \"receiver\" {\n\t\tvalue = loki.process.add_level.receiver\n\t}\n}\n"
   structured-metadata.alloy: "declare \"structured_metadata\" {\n\targument \"forward_to\"
     {\n\t\tcomment = \"Must be a list(LogsReceiver) where collected logs should be
     forwarded to\"\n\t}\n\n\targument \"metadata\" {\n\t\toptional = true\n\t}\n\n\texport
@@ -919,7 +938,7 @@ data:
     = \"helm_sh_chart\",\n\t\t\t\tpod        = \"pod\",\n\t\t\t})\n\t\t}\n\t}\n}\n"
 kind: ConfigMap
 metadata:
-  name: alloy-modules-kubernetes-logs-kc9tggd8f7
+  name: alloy-modules-kubernetes-logs-82tfbf9997
   namespace: galah-monitoring
 ---
 apiVersion: v1
@@ -965,8 +984,8 @@ data:
     \"endpoints\")\n\n\t\tselectors {\n\t\t\trole  = coalesce(argument.role.value,
     \"endpoints\")\n\t\t\tfield = join(coalesce(argument.field_selectors.value, []),
     \",\")\n\t\t\tlabel = join(coalesce(argument.label_selectors.value, []), \",\")\n\t\t}\n\n\t\tnamespaces
-    {\n\t\t\tnames = coalesce(arguments.namespaces.value, [])\n\t\t}\n\t}\n\n\t//
-    filter metrics by kubernetes annotations\n\tdiscovery.relabel \"annotation_metrics_filter\"
+    {\n\t\t\tnames = coalesce(argument.namespaces.value, [])\n\t\t}\n\t}\n\n\t// filter
+    metrics by kubernetes annotations\n\tdiscovery.relabel \"annotation_metrics_filter\"
     {\n\t\ttargets = discovery.kubernetes.annotation_metrics.targets\n\n\t\t// allow
     resources to declare their metrics scraped or not\n\t\t// Example Annotation:\n\t\t//
     \  metrics.grafana.com/scrape: false\n\t\t//\n\t\t// the label prometheus.io/service-monitor:
@@ -1203,6 +1222,18 @@ data:
     \ = argument.max_cache_size_mimir.value\n\t\tclustering      = argument.clustering_mimir.value\n\t}\n}\n"
   podmonitors.alloy: |2+
 
+  prom-metrics-filter.alloy: "declare \"filter_prom_metrics\" {\n\targument \"forward_to\"
+    {\n\t\toptional = false\n\t}\n\n\targument \"keep_metrics\" {\n\t\toptional =
+    true\n\t}\n\n\targument \"drop_metrics\" {\n\t\toptional = true\n\t}\n\n\targument
+    \"max_cache_size\" {\n\t\toptional = true\n\t\tdefault  = 100000\n\t}\n\n\tprometheus.relabel
+    \"filter_metrics\" {\n\t\tforward_to     = argument.forward_to.value\n\t\tmax_cache_size
+    = coalesce(argument.max_cache_size.value, 100000)\n\n\t\t// drop metrics that
+    match the drop_metrics regex\n\t\trule {\n\t\t\tsource_labels = [\"__name__\"]\n\t\t\tregex
+    \        = coalesce(argument.drop_metrics.value, \"(^(go|process)_.+$)\")\n\t\t\taction
+    \       = \"drop\"\n\t\t}\n\n\t\t// keep only metrics that match the keep_metrics
+    regex\n\t\trule {\n\t\t\tsource_labels = [\"__name__\"]\n\t\t\tregex         =
+    coalesce(argument.keep_metrics.value, \"(.+)\")\n\t\t\taction        = \"keep\"\n\t\t}\n\t}\n\n\texport
+    \"metrics_receiver\" {\n\t\tvalue = prometheus.relabel.filter_metrics.receiver\n\t}\n}\n"
   servicemonitors.alloy: "declare \"servicemonitors_scrape\" {\n\targument \"forward_to\"
     {\n\t\toptional = false\n\t}\n\n\targument \"keep_metrics\" {\n\t\toptional =
     true\n\t}\n\n\targument \"drop_metrics\" {\n\t\toptional = true\n\t}\n\n\targument
@@ -1219,7 +1250,7 @@ data:
     coalesce(argument.keep_metrics.value, \"(.+)\")\n\t\t}\n\t}\n}\n"
 kind: ConfigMap
 metadata:
-  name: alloy-modules-kubernetes-metrics-659bdb6g7d
+  name: alloy-modules-kubernetes-metrics-f458d89k2h
   namespace: galah-monitoring
 ---
 apiVersion: v1
@@ -1250,9 +1281,15 @@ metadata:
   namespace: galah-monitoring
 ---
 apiVersion: v1
+data:
+  filter-health.alloy: "declare \"filter_health\" {\n\targument \"forward_to\" {\n\t\toptional
+    = false\n\t}\n\n\texport \"receiver\" {\n\t\tvalue = otelcol.processor.filter.health.input\n\t}\n\n\totelcol.processor.filter
+    \"health\" {\n\t\terror_mode = \"ignore\"\n\n\t\ttraces {\n\t\t\tspan = [\n\t\t\t\t\"attributes[\\\"http.route\\\"]
+    == \\\"/live\\\"\",\n\t\t\t\t\"attributes[\\\"http.route\\\"] == \\\"/healthy\\\"\",\n\t\t\t\t\"attributes[\\\"http.route\\\"]
+    == \\\"/ready\\\"\",\n\t\t\t]\n\t\t}\n\n\t\toutput {\n\t\t\ttraces = argument.forward_to.value\n\t\t}\n\t}\n}\n"
 kind: ConfigMap
 metadata:
-  name: alloy-modules-kubernetes-traces-6ct58987ht
+  name: alloy-modules-kubernetes-traces-2fkc887g8m
   namespace: galah-monitoring
 ---
 apiVersion: v1
@@ -1548,19 +1585,19 @@ spec:
       serviceAccountName: alloy
       volumes:
       - configMap:
-          name: alloy-config-fdhmffmbgh
+          name: alloy-config-h9mk245cbf
         name: config
       - configMap:
-          name: alloy-modules-kubernetes-metrics-659bdb6g7d
+          name: alloy-modules-kubernetes-metrics-f458d89k2h
         name: modules-kubernetes-metrics
       - configMap:
-          name: alloy-modules-kubernetes-logs-kc9tggd8f7
+          name: alloy-modules-kubernetes-logs-82tfbf9997
         name: modules-kubernetes-logs
       - configMap:
-          name: alloy-modules-kubernetes-traces-6ct58987ht
+          name: alloy-modules-kubernetes-traces-2fkc887g8m
         name: modules-kubernetes-traces
       - configMap:
-          name: alloy-modules-kubernetes-jobs-5ttmt7dm4h
+          name: alloy-modules-kubernetes-jobs-k7df8ckd98
         name: modules-kubernetes-jobs
       - configMap:
           name: alloy-modules-integrations-h754dg99ch
