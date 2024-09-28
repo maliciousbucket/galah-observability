@@ -64,14 +64,14 @@ spec:
             sources:
               - configMap:
                   name: nginx-conf
+              - configMap:
+                  name: nginx-templates
 #              - configMap:
-#                  name: nginx-templates
-              - configMap:
-                  name: nginx-mimir-template
-              - configMap:
-                  name: nginx-loki-template
-              - configMap:
-                  name: nginx-tempo-template
+#                  name: nginx-mimir-template
+#              - configMap:
+#                  name: nginx-loki-template
+#              - configMap:
+#                  name: nginx-tempo-template
         - name: entry-scripts
           emptyDir:
             {}

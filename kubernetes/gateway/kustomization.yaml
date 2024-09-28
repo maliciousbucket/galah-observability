@@ -30,29 +30,32 @@ configMapGenerator:
     - nginx/docker-entrypoint.d/env-templates.sh
   options:
     disableNameSuffixHash: true
-#- name: nginx-templates
+- name: nginx-templates
+  namespace: gateway
+  options:
+    disableNameSuffixHash: true
+  files:
+    - gateway_mimir.conf.template=nginx/gateway_mimir.conf
+    - gateway_loki.conf.template=nginx/gateway_loki.conf
+    - gateway_tempo.conf.template=nginx/gateway_tempo.conf
+#- name: nginx-mimir-template
 #  namespace: gateway
 #  options:
 #    disableNameSuffixHash: true
 #  files:
+##    - nginx/gateway_mimir.conf.template=nginx/gateway_mimir.conf
 #    - gateway_mimir.conf.template=nginx/gateway_mimir.conf
+#- name: nginx-loki-template
+#  namespace: gateway
+#  options:
+#    disableNameSuffixHash: true
+#  files:
+##    - nginx/gateway_loki.conf.template=nginx/gateway_loki.conf
 #    - gateway_loki.conf.template=nginx/gateway_loki.conf
+#- name: nginx-tempo-template
+#  namespace: gateway
+#  options:
+#    disableNameSuffixHash: true
+#  files:
+##    - nginx/gateway_tempo.conf.template=nginx/gateway_tempo.conf
 #    - gateway_tempo.conf.template=nginx/gateway_tempo.conf
-- name: nginx-mimir-template
-  namespace: gateway
-  options:
-    disableNameSuffixHash: true
-  files:
-    - nginx/gateway_mimir.conf.template=nginx/gateway_mimir.conf
-- name: nginx-loki-template
-  namespace: gateway
-  options:
-    disableNameSuffixHash: true
-  files:
-    - nginx/gateway_loki.conf.template=nginx/gateway_loki.conf
-- name: nginx-tempo-template
-  namespace: gateway
-  options:
-    disableNameSuffixHash: true
-  files:
-    - nginx/gateway_tempo.conf.template=nginx/gateway_tempo.conf

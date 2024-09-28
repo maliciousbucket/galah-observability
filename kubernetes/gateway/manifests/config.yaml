@@ -252,7 +252,7 @@ metadata:
 ---
 apiVersion: v1
 data:
-  nginx/gateway_loki.conf.template: |-
+  gateway_loki.conf.template: |-
     server {
         listen 3100;
         listen [::]:3100;
@@ -341,14 +341,7 @@ data:
           proxy_pass      http://${LOKI_QUERY_FRONTEND_HOST}:3100$request_uri;
         }
     }
-kind: ConfigMap
-metadata:
-  name: nginx-loki-template
-  namespace: gateway
----
-apiVersion: v1
-data:
-  nginx/gateway_mimir.conf.template: |-
+  gateway_mimir.conf.template: |-
     server {
         listen 9090;
         listen [::]:9090;
@@ -436,14 +429,7 @@ data:
 
 
     }
-kind: ConfigMap
-metadata:
-  name: nginx-mimir-template
-  namespace: gateway
----
-apiVersion: v1
-data:
-  nginx/gateway_tempo.conf.template: |-
+  gateway_tempo.conf.template: |-
     upstream grpc_tempo {
         server ${TEMPO_DISTRIBUTOR_HOST}:3205;
     }
@@ -563,7 +549,7 @@ data:
     }
 kind: ConfigMap
 metadata:
-  name: nginx-tempo-template
+  name: nginx-templates
   namespace: gateway
 ---
 apiVersion: v1
@@ -656,11 +642,7 @@ spec:
           - configMap:
               name: nginx-conf-mfdm49kc72
           - configMap:
-              name: nginx-mimir-template
-          - configMap:
-              name: nginx-loki-template
-          - configMap:
-              name: nginx-tempo-template
+              name: nginx-templates
       - emptyDir: {}
         name: entry-scripts
       - configMap:
