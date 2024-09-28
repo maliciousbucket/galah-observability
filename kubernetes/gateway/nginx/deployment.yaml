@@ -67,11 +67,11 @@ spec:
 #              - configMap:
 #                  name: nginx-templates
               - configMap:
-                  name: nginx-mimir-tempalte
+                  name: nginx-mimir-template
               - configMap:
                   name: nginx-loki-template
               - configMap:
-                  name: nginx-temp-template
+                  name: nginx-tempo-template
         - name: entry-scripts
           emptyDir:
             {}
