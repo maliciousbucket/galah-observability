@@ -655,11 +655,11 @@ spec:
           - configMap:
               name: nginx-conf-mfdm49kc72
           - configMap:
-              name: nginx-mimir-tempalte
+              name: nginx-mimir-template
           - configMap:
               name: nginx-loki-template
           - configMap:
-              name: nginx-temp-template
+              name: nginx-tempo-template
       - emptyDir: {}
         name: entry-scripts
       - configMap:
