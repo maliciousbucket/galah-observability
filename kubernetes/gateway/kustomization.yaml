@@ -51,6 +51,7 @@ configMapGenerator:
   files:
     - gateway_loki.conf.template=nginx/gateway_loki.conf
 - name: nginx-tempo-template
+  namespace: gateway
   options:
     disableNameSuffixHash: true
   files:

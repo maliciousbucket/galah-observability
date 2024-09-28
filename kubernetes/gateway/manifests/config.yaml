@@ -564,6 +564,7 @@ data:
 kind: ConfigMap
 metadata:
   name: nginx-tempo-template
+  namespace: gateway
 ---
 apiVersion: v1
 kind: Service
