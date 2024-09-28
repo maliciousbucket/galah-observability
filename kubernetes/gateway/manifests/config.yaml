@@ -252,7 +252,7 @@ metadata:
 ---
 apiVersion: v1
 data:
-  gateway_loki.conf.template: |-
+  nginx/gateway_loki.conf.template: |-
     server {
         listen 3100;
         listen [::]:3100;
@@ -348,7 +348,7 @@ metadata:
 ---
 apiVersion: v1
 data:
-  gateway_mimir.conf.template: |-
+  nginx/gateway_mimir.conf.template: |-
     server {
         listen 9090;
         listen [::]:9090;
@@ -443,7 +443,7 @@ metadata:
 ---
 apiVersion: v1
 data:
-  gateway_tempo.conf.template: |-
+  nginx/gateway_tempo.conf.template: |-
     upstream grpc_tempo {
         server ${TEMPO_DISTRIBUTOR_HOST}:3205;
     }

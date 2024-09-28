@@ -43,16 +43,16 @@ configMapGenerator:
   options:
     disableNameSuffixHash: true
   files:
-    - gateway_mimir.conf.template=nginx/gateway_mimir.conf
+    - nginx/gateway_mimir.conf.template=nginx/gateway_mimir.conf
 - name: nginx-loki-template
   namespace: gateway
   options:
     disableNameSuffixHash: true
   files:
-    - gateway_loki.conf.template=nginx/gateway_loki.conf
+    - nginx/gateway_loki.conf.template=nginx/gateway_loki.conf
 - name: nginx-tempo-template
   namespace: gateway
   options:
     disableNameSuffixHash: true
   files:
-    - gateway_tempo.conf.template=nginx/gateway_tempo.conf
+    - nginx/gateway_tempo.conf.template=nginx/gateway_tempo.conf
