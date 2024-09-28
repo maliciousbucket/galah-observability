@@ -16,12 +16,15 @@ configMapGenerator:
 
     files:
       - custom.ini=configs/grafana.ini
-  - name: grafana-dashboards
+  - name: grafana-dashboard-provisioning
     files:
-      - configs/definitions/k6-prometheus.json
+      - configs/provisioning/dashboards/galah.yaml
   - name: grafana-datasources
     files:
       - configs/provisioning/datasources/datasources.yaml
+  - name: grafana-dashboards
+    files:
+      - configs/definitions/k6-prometheus.json
 
 secretGenerator:
   - name: grafana-env

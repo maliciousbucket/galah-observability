@@ -109,6 +109,26 @@ metadata:
 ---
 apiVersion: v1
 data:
+  galah.yaml: |-
+    apiVersion: 1
+
+    providers:
+      - name: 'Galah'
+        orgId: 1
+        type: file
+        disableDeletion: false
+        editable: true
+        updateIntervalSeconds: 10
+        options:
+          path: /var/lib/grafana/dashboards
+          foldersFromFilesStructure: true
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-provisioning-g5f645dmtk
+  namespace: galah-monitoring
+---
+apiVersion: v1
+data:
   k6-prometheus.json: |
     {
       "annotations": {
@@ -2196,7 +2216,7 @@ data:
         type: prometheus
         access: proxy
         orgId: 1
-        url: http://nginx.gateway.svc.cluster.local.:9090
+        url: http://nginx.gateway.svc.cluster.local.:9090/prometheus
         basicAuth: false
         isDefault: false
         version: 1
@@ -2207,7 +2227,7 @@ data:
     #      httpMethod: GET
 kind: ConfigMap
 metadata:
-  name: grafana-datasources-td99f426mc
+  name: grafana-datasources-m976898hc8
   namespace: galah-monitoring
 ---
 apiVersion: v1
@@ -2300,10 +2320,9 @@ spec:
         - mountPath: /var/lib/grafana
           name: grafana-storage
           subPath: grafana
-        - mountPath: /var/lib/grafana/dashboards
-          name: grafana-storage
-          subPath: dashboards
         - mountPath: /etc/grafana/provisioning/dashboards
+          name: provisioning-dashboards
+        - mountPath: /var/lib/grafana/dashboards
           name: dashboards
         - mountPath: /etc/grafana/provisioning/datasources
           name: datasources
@@ -2333,7 +2352,7 @@ spec:
           name: grafana-dashboards-4cg2m622f2
         name: dashboards
       - configMap:
-          name: grafana-datasources-td99f426mc
+          name: grafana-datasources-m976898hc8
         name: datasources
       - emptyDir:
           sizeLimit: 1Gi
@@ -2341,6 +2360,9 @@ spec:
       - configMap:
           name: grafana-config-2m4bfbk44d
         name: grafana-config
+      - configMap:
+          name: grafana-dashboard-provisioning-g5f645dmtk
+        name: provisioning-dashboards
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
