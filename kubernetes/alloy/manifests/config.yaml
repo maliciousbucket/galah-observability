@@ -660,9 +660,9 @@ data:
     \"drop_kube_resources\" {\n\t\toptional = true\n\t}\n\n\targument \"keep_kubelet\"
     {\n\t\toptional = true\n\t}\n\n\targument \"drop_kubelet\" {\n\t\toptional = true\n\t}\n\n\targument
     \"keep_api_server\" {\n\t\toptional = true\n\t}\n\n\targument \"drop_api_server\"
-    {\n\t\toptional = true\n\t}\n\t/*\n\timport.file \"kube_state_metrics\" {\n\t\tfilename
+    {\n\t\toptional = true\n\t}\n\n\timport.file \"kube_state_metrics\" {\n\t\tfilename
     = \"/etc/alloy/modules/kubernetes/kubernetes/kube-state-metrics.alloy\"\n\t}\n\n\tkube_state_metrics.integrations_scrape_kube_state_metrics
-    \"kube_state_metrics\" {\n\t    forward_to = argument.forward_to.value\n\t}\n\n\t*/\n\n\timport.file
+    \"kube_state_metrics\" {\n\t    forward_to = argument.forward_to.value\n\t}\n\n\n\n\timport.file
     \"kube_resources\" {\n\t\tfilename = \"/etc/alloy/modules/kubernetes/kubernetes/kube-resources.alloy\"\n\t}\n\n\tkube_resources.integrations_scrape_kube_resources
     \"kube_resources\" {\n\t\tforward_to = argument.forward_to.value\n\t\t//namespaces
     = argument.kube_resource_namespaces.value\n\t}\n\n\timport.file \"kubelet\" {\n\t\tfilename
@@ -672,7 +672,7 @@ data:
     \"api_server\" {\n\t\tforward_to = argument.forward_to.value\n\t}\n}\n"
   log-pipeline.alloy: "declare \"log_pipeline\" {\n\targument \"forward_to\" {\n\t\toptional
     = false\n\t}\n\n\targument \"keep_labels\" {\n\t\toptional = true\n\t}\n\n\texport
-    \"receiver\" {\n\t\tvalue = [metadata.structured_metadata.pipeline.receiver]\n\t}\n/*\n\timport.file
+    \"receiver\" {\n\t\tvalue = metadata.structured_metadata.pipeline.receiver\n\t}\n/*\n\timport.file
     \"relabel_levels\" {\n\t\tfilename = \"/etc/alloy/modules/kubernetes/logs/relabel-with-level.alloy\"\n\t}\n\n\trelabel_levels.relabel_with_level
     \"pipeline\" {\n\t\tforward_to = [metadata.structured_metadata.pipeline.receiver]\n\t}\n\t*/\n\n\n\timport.file
     \"metadata\" {\n\t\tfilename = \"/etc/alloy/modules/kubernetes/logs/structured-metadata.alloy\"\n\t}\n\n\tmetadata.structured_metadata
@@ -745,7 +745,7 @@ data:
     \               = argument.clustering.value\n\t}\n}\n"
 kind: ConfigMap
 metadata:
-  name: alloy-modules-kubernetes-jobs-4d8b6kcb65
+  name: alloy-modules-kubernetes-jobs-cgkt26h6k8
   namespace: galah-monitoring
 ---
 apiVersion: v1
@@ -1597,7 +1597,7 @@ spec:
           name: alloy-modules-kubernetes-traces-2fkc887g8m
         name: modules-kubernetes-traces
       - configMap:
-          name: alloy-modules-kubernetes-jobs-4d8b6kcb65
+          name: alloy-modules-kubernetes-jobs-cgkt26h6k8
         name: modules-kubernetes-jobs
       - configMap:
           name: alloy-modules-integrations-h754dg99ch

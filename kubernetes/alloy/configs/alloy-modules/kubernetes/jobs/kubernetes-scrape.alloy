@@ -48,7 +48,7 @@ declare "kubernetes_scrape" {
 	argument "drop_api_server" {
 		optional = true
 	}
-	/*
+
 	import.file "kube_state_metrics" {
 		filename = "/etc/alloy/modules/kubernetes/kubernetes/kube-state-metrics.alloy"
 	}
@@ -57,7 +57,7 @@ declare "kubernetes_scrape" {
 	    forward_to = argument.forward_to.value
 	}
 
-	*/
+
 
 	import.file "kube_resources" {
 		filename = "/etc/alloy/modules/kubernetes/kubernetes/kube-resources.alloy"
