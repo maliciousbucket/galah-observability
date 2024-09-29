@@ -663,8 +663,9 @@ data:
     \"keep_api_server\" {\n\t\toptional = true\n\t}\n\n\targument \"drop_api_server\"
     {\n\t\toptional = true\n\t}\n\n\timport.file \"kube_state_metrics\" {\n\t\tfilename
     = \"/etc/alloy/modules/kubernetes/kubernetes/kube-state-metrics.alloy\"\n\t}\n\n\tkube_state_metrics.integrations_scrape_kube_state_metrics
-    \"kube_state_metrics\" {\n\t    forward_to = argument.forward_to.value\n\t}\n\n\n\n\timport.file
-    \"kube_resources\" {\n\t\tfilename = \"/etc/alloy/modules/kubernetes/kubernetes/kube-resources.alloy\"\n\t}\n\n\tkube_resources.integrations_scrape_kube_resources
+    \"kube_state_metrics\" {\n\t    forward_to = argument.forward_to.value\n\t    cluster
+    = \"galah-monitoring\"\n\t}\n\n\n\n\timport.file \"kube_resources\" {\n\t\tfilename
+    = \"/etc/alloy/modules/kubernetes/kubernetes/kube-resources.alloy\"\n\t}\n\n\tkube_resources.integrations_scrape_kube_resources
     \"kube_resources\" {\n\t\tforward_to = argument.forward_to.value\n\t\t//namespaces
     = argument.kube_resource_namespaces.value\n\t}\n\n\timport.file \"kubelet\" {\n\t\tfilename
     = \"/etc/alloy/modules/kubernetes/kubernetes/kubelet.alloy\"\n\t}\n\n\tkubelet.integrations_scrape_kubelet
@@ -746,7 +747,7 @@ data:
     \               = argument.clustering.value\n\t}\n}\n"
 kind: ConfigMap
 metadata:
-  name: alloy-modules-kubernetes-jobs-cgkt26h6k8
+  name: alloy-modules-kubernetes-jobs-tb68g97kb2
   namespace: galah-monitoring
 ---
 apiVersion: v1
@@ -1598,7 +1599,7 @@ spec:
           name: alloy-modules-kubernetes-traces-2fkc887g8m
         name: modules-kubernetes-traces
       - configMap:
-          name: alloy-modules-kubernetes-jobs-cgkt26h6k8
+          name: alloy-modules-kubernetes-jobs-tb68g97kb2
         name: modules-kubernetes-jobs
       - configMap:
           name: alloy-modules-integrations-h754dg99ch
