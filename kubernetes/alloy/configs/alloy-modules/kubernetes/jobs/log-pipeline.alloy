@@ -8,9 +8,9 @@ declare "log_pipeline" {
 	}
 
 	export "receiver" {
-		value = relabel_levels.relabel_with_level.pipeline.receiver
+		value = [metadata.structured_metadata.pipeline.receiver]
 	}
-
+/*
 	import.file "relabel_levels" {
 		filename = "/etc/alloy/modules/kubernetes/logs/relabel-with-level.alloy"
 	}
@@ -18,6 +18,8 @@ declare "log_pipeline" {
 	relabel_levels.relabel_with_level "pipeline" {
 		forward_to = [metadata.structured_metadata.pipeline.receiver]
 	}
+	*/
+
 
 	import.file "metadata" {
 		filename = "/etc/alloy/modules/kubernetes/logs/structured-metadata.alloy"
