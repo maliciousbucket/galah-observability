@@ -76,6 +76,7 @@ configMapGenerator:
     - configs/alloy-modules/kubernetes/integrations/kubernetes/kube-state-metrics.alloy
     - configs/alloy-modules/kubernetes/integrations/kubernetes/kubelet.alloy
     - configs/alloy-modules/kubernetes/integrations/kubernetes/probes.alloy
+    - configs/alloy-modules/kubernetes/integrations/kubernetes/cadvisor.alloy
 
   - name: alloy-modules-kubernetes-collectors
     namespace: galah-monitoring

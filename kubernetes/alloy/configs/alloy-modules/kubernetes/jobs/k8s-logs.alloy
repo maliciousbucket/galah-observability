@@ -4,7 +4,7 @@ declare "k8s_logs" {
 	}
 
 	argument "cluster" {
-	    optional = true
+		optional = true
 	}
 
 	import.file "pods" {
@@ -22,6 +22,6 @@ declare "k8s_logs" {
 	events.kubernetes_cluster_events "k8s_events" {
 		job_label  = "integrations/kubernetes/events"
 		forward_to = argument.forward_to.value
-		cluster = coalesce(argument.cluster.value, "k3d-galah-monitoring")
+		cluster    = coalesce(argument.cluster.value, "k3d-galah-monitoring")
 	}
 }
