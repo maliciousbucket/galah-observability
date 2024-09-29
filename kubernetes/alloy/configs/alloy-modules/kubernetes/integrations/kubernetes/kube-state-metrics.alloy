@@ -80,6 +80,7 @@ declare "integrations_scrape_kube_state_metrics" {
 	}
 
 	discovery.relabel "kube_state_metrics" {
+	targets = discovery.kubernetes.kube_state_metrics.targets
 		rule {
 			source_labels = ["__meta_kubernetes_service_port_name"]
 			regex         = coalesce(argument.port_name.value, "http")

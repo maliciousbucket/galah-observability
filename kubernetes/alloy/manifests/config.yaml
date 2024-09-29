@@ -476,7 +476,8 @@ data:
     = join(coalesce(argument.field_selectors.value, [\"app.kubernetes.io/name=kube-state-metrics\"]),
     \",\")\n\t\t\tlabel = join(coalesce(argument.label_selectors.value, []), \",\")\n\t\t}\n\n\t\tnamespaces
     {\n\t\t\tnames = coalesce(argument.namespaces.value, [])\n\t\t}\n\t}\n\n\tdiscovery.relabel
-    \"kube_state_metrics\" {\n\t\trule {\n\t\t\tsource_labels = [\"__meta_kubernetes_service_port_name\"]\n\t\t\tregex
+    \"kube_state_metrics\" {\n\ttargets = discovery.kubernetes.kube_state_metrics.targets\n\t\trule
+    {\n\t\t\tsource_labels = [\"__meta_kubernetes_service_port_name\"]\n\t\t\tregex
     \        = coalesce(argument.port_name.value, \"http\")\n\t\t\taction        =
     \"keep\"\n\t\t}\n\n\t\t// set the cluster label\n\t\trule {\n\t\t\taction       =
     \"replace\"\n\t\t\treplacement  = argument.cluster.value\n\t\t\ttarget_label =
@@ -567,7 +568,7 @@ data:
     \"$1\"\n\t\t\ttarget_label = \"app\"\n\t\t}\n\t}\n}\n"
 kind: ConfigMap
 metadata:
-  name: alloy-modules-integrations-kubernetes-5g6gmhc485
+  name: alloy-modules-integrations-kubernetes-66482h7dbd
   namespace: galah-monitoring
 ---
 apiVersion: v1
@@ -1605,7 +1606,7 @@ spec:
           name: alloy-modules-integrations-h754dg99ch
         name: modules-integrations
       - configMap:
-          name: alloy-modules-integrations-kubernetes-5g6gmhc485
+          name: alloy-modules-integrations-kubernetes-66482h7dbd
         name: modules-integrations-kubernetes
       - configMap:
           name: alloy-modules-kubernetes-collectors-bb5m62mkmh
