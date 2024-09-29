@@ -761,7 +761,7 @@ data:
     \"cadvisor\" {\n\t    forward_to = argument.forward_to.value\n\t}\n\n\timport.file
     \"podmonitors\" {\n        filename = \"/etc/alloy/modules/kubernetes/metrics/podmonitors.alloy\n\t}\n\n\tpodmonitors.podmonitors_scrape
     \"podmonitors\" {\n\t    forward_to = argument.forward_to.value\n\t}\n\n\timport.file
-    \"service_monitors\" {\n\t    filename = /etc/alloy/modules/kubernetes/metrics/servicemonitors.alloy\n\t}\n\n\tservice_monitors.servicemonitors_scrap
+    \"service_monitors\" {\n\t    filename = /etc/alloy/modules/kubernetes/metrics/servicemonitors.alloy\n\t}\n\n\tservice_monitors.servicemonitors_scrape
     \"service_monitors\" {\n\t     forward_to = argument.forward_to.value\n\t}\n}\n"
   log-pipeline.alloy: "declare \"log_pipeline\" {\n\targument \"forward_to\" {\n\t\toptional
     = false\n\t}\n\n\targument \"keep_labels\" {\n\t\toptional = true\n\t}\n\n\texport
@@ -838,7 +838,7 @@ data:
     \               = argument.clustering.value\n\t}\n}\n"
 kind: ConfigMap
 metadata:
-  name: alloy-modules-kubernetes-jobs-c5h8m2t286
+  name: alloy-modules-kubernetes-jobs-gb7568bd22
   namespace: galah-monitoring
 ---
 apiVersion: v1
@@ -1707,7 +1707,7 @@ spec:
           name: alloy-modules-kubernetes-traces-2fkc887g8m
         name: modules-kubernetes-traces
       - configMap:
-          name: alloy-modules-kubernetes-jobs-c5h8m2t286
+          name: alloy-modules-kubernetes-jobs-gb7568bd22
         name: modules-kubernetes-jobs
       - configMap:
           name: alloy-modules-integrations-h754dg99ch

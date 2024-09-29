@@ -103,7 +103,7 @@ declare "kubernetes_scrape" {
 	    filename = /etc/alloy/modules/kubernetes/metrics/servicemonitors.alloy
 	}
 
-	service_monitors.servicemonitors_scrap "service_monitors" {
+	service_monitors.servicemonitors_scrape "service_monitors" {
 	     forward_to = argument.forward_to.value
 	}
 }
