@@ -467,7 +467,8 @@ data:
     = true\n\t}\n\n\targument \"scrape_interval\" {\n\t\tcomment  = \"How often to
     scrape metrics from the targets (default: 60s)\"\n\t\toptional = true\n\t}\n\n\targument
     \"scrape_timeout\" {\n\t\tcomment  = \"How long before a scrape times out (default:
-    10s)\"\n\t\toptional = true\n\t}\n\n\targument \"max_cache_size\" {\n\t\tcomment
+    10s)\"\n\t\toptional = true\n\t}\n\n\targument \"clustering\" {\n\t    optional
+    = true\n\t    default = false\n\t}\n\n\targument \"max_cache_size\" {\n\t\tcomment
     \ = \"The maximum number of elements to hold in the relabeling cache (default:
     100000).  This should be at least 2x-5x your largest scrape target or samples
     appended rate.\"\n\t\toptional = true\n\t}\n\n\tdiscovery.kubernetes \"kube_state_metrics\"
@@ -566,7 +567,7 @@ data:
     \"$1\"\n\t\t\ttarget_label = \"app\"\n\t\t}\n\t}\n}\n"
 kind: ConfigMap
 metadata:
-  name: alloy-modules-integrations-kubernetes-t66mhh7hbt
+  name: alloy-modules-integrations-kubernetes-k2dgft87kg
   namespace: galah-monitoring
 ---
 apiVersion: v1
@@ -1603,7 +1604,7 @@ spec:
           name: alloy-modules-integrations-h754dg99ch
         name: modules-integrations
       - configMap:
-          name: alloy-modules-integrations-kubernetes-t66mhh7hbt
+          name: alloy-modules-integrations-kubernetes-k2dgft87kg
         name: modules-integrations-kubernetes
       - configMap:
           name: alloy-modules-kubernetes-collectors-bb5m62mkmh
