@@ -8,7 +8,7 @@ declare "log_pipeline" {
 	}
 
 	export "receiver" {
-		value = [metadata.structured_metadata.pipeline.receiver]
+		value = metadata.structured_metadata.pipeline.receiver
 	}
 /*
 	import.file "relabel_levels" {
