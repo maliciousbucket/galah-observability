@@ -26,6 +26,8 @@ configMapGenerator:
     files:
       - configs/definitions/k6-prometheus.json
       - configs/definitions/autoscaler.json
+      - configs/definitions/pods.json
+      - configs/definitions/namespaces.json
 
 secretGenerator:
   - name: grafana-env
