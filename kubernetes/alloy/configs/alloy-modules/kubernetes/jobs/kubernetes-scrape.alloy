@@ -55,6 +55,7 @@ declare "kubernetes_scrape" {
 
 	kube_state_metrics.integrations_scrape_kube_state_metrics "kube_state_metrics" {
 	    forward_to = argument.forward_to.value
+	    cluster = "galah-monitoring"
 	}
 
 
