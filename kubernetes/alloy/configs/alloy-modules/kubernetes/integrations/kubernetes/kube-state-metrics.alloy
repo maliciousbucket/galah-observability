@@ -109,7 +109,7 @@ declare "integrations_scrape_kube_state_metrics" {
 		scrape_timeout  = coalesce(argument.scrape_timeout.value, "10s")
 
 		clustering {
-			enabled = coalesce(arguments.clustering.value, false)
+			enabled = coalesce(argument.clustering.value, false)
 		}
 
 		forward_to = [prometheus.relabel.kube_state_metrics.receiver]

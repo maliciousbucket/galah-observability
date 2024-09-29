@@ -485,7 +485,7 @@ data:
     \"kube_state_metrics\" {\n\t\ttargets = discovery.relabel.kube_state_metrics.output\n\n\t\tjob_name
     \       = coalesce(argument.job_label.value, \"integrations/kubernetes/kube-state-metrics\")\n\t\tscrape_interval
     = coalesce(argument.scrape_interval.value, \"60s\")\n\t\tscrape_timeout  = coalesce(argument.scrape_timeout.value,
-    \"10s\")\n\n\t\tclustering {\n\t\t\tenabled = coalesce(arguments.clustering.value,
+    \"10s\")\n\n\t\tclustering {\n\t\t\tenabled = coalesce(argument.clustering.value,
     false)\n\t\t}\n\n\t\tforward_to = [prometheus.relabel.kube_state_metrics.receiver]\n\t}\n\n\tprometheus.relabel
     \"kube_state_metrics\" {\n\t\tforward_to     = argument.forward_to.value\n\t\tmax_cache_size
     = coalesce(argument.max_cache_size.value, 100000)\n\n\t\t// drop metrics that
@@ -567,7 +567,7 @@ data:
     \"$1\"\n\t\t\ttarget_label = \"app\"\n\t\t}\n\t}\n}\n"
 kind: ConfigMap
 metadata:
-  name: alloy-modules-integrations-kubernetes-k2dgft87kg
+  name: alloy-modules-integrations-kubernetes-5g6gmhc485
   namespace: galah-monitoring
 ---
 apiVersion: v1
@@ -1604,7 +1604,7 @@ spec:
           name: alloy-modules-integrations-h754dg99ch
         name: modules-integrations
       - configMap:
-          name: alloy-modules-integrations-kubernetes-k2dgft87kg
+          name: alloy-modules-integrations-kubernetes-5g6gmhc485
         name: modules-integrations-kubernetes
       - configMap:
           name: alloy-modules-kubernetes-collectors-bb5m62mkmh
