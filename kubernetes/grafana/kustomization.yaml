@@ -25,6 +25,7 @@ configMapGenerator:
   - name: grafana-dashboards
     files:
       - configs/definitions/k6-prometheus.json
+      - configs/definitions/autoscaler.json
 
 secretGenerator:
   - name: grafana-env

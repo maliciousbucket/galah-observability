@@ -49,14 +49,10 @@ spec:
             - name: grafana-storage
               mountPath: /var/lib/grafana
               subPath: grafana
-#            - name: grafana-storage
-#              mountPath: /var/lib/grafana/dashboards
-#              subPath: dashboards
             - name: provisioning-dashboards
               mountPath: /etc/grafana/provisioning/dashboards
             - name: dashboards
               mountPath: /var/lib/grafana/dashboards
-#              subPath: dashboards.yml
             - name: datasources
               mountPath: /etc/grafana/provisioning/datasources
               readOnly: false
