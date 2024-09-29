@@ -92,7 +92,7 @@ declare "kubernetes_scrape" {
 	}
 
 	import.file "podmonitors" {
-        filename = "/etc/alloy/modules/kubernetes/metrics/podmonitors.alloy
+        filename = "/etc/alloy/modules/kubernetes/metrics/podmonitors.alloy"
 	}
 
 	podmonitors.podmonitors_scrape "podmonitors" {
@@ -100,7 +100,7 @@ declare "kubernetes_scrape" {
 	}
 
 	import.file "service_monitors" {
-	    filename = /etc/alloy/modules/kubernetes/metrics/servicemonitors.alloy
+	    filename = "/etc/alloy/modules/kubernetes/metrics/servicemonitors.alloy"
 	}
 
 	service_monitors.servicemonitors_scrape "service_monitors" {
