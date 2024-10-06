@@ -28,6 +28,7 @@ configMapGenerator:
       - configs/definitions/autoscaler.json
       - configs/definitions/pods.json
       - configs/definitions/namespaces.json
+      - configs/definitions/pluck.json
 
 secretGenerator:
   - name: grafana-env
