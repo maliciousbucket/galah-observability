@@ -25,7 +25,7 @@ resources:
   - rbac.yaml
   - deployment.yaml
   - servicemonitor.yaml
-  - namespace.yaml
+#  - namespace.yaml
 
 replicas:
   - name: mimir

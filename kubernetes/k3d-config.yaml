@@ -10,32 +10,40 @@ kubeAPI:
   hostPort: "6445"
 image: rancher/k3s:v1.30.5-k3s1
 ports:
-#  - port: 8080:80
+#  - port: 8080:8080
 #    nodeFilters:
 #      - loadbalancer
-  - port: 80:80
-    nodeFilters:
-      - loadbalancer
+#  - port: 80:80
+#    nodeFilters:
+#      - loadbalancer
   - port: 8083:80 # same as `--port '8080:81@loadbalancer'`
     nodeFilters:
       - loadbalancer
 
 
-#  - port: 8081:80
-#    nodeFilters:
-#      - loadbalancer
 
-
-#  - port: 8443:443
-#    nodeFilters:
-#      - loadbalancer
+  - port: 8443:443
+    nodeFilters:
+      - loadbalancer
   - port: 8082:80
     nodeFilters:
       - loadbalancer
   - port: 3000:80
     nodeFilters:
       - loadbalancer
-  - port: 12345:12345
+  - port: 12345:31128
+    nodeFilters:
+      - loadbalancer
+  - port: 30080:30080
+    nodeFilters:
+      - loadbalancer
+  - port: 30443:30443
+    nodeFilters:
+      - loadbalancer
+  - port: 30335:30335
+    nodeFilters:
+      - loadbalancer
+  - port: 30100-30120:30100-30120
     nodeFilters:
       - loadbalancer
 
@@ -55,6 +63,9 @@ files:
 - description: "Pre-installed Cert-Manager CRDs"
   source: cert-manager/manifests/config.yaml
   destination: k3s-manifests-custom/cert-manager-config.yaml
+- description: "Pre-installed Kube State Metrics CRDs"
+  source: kube-state-metrics/manifests/config.yaml
+  destination: k3s-manifests-custom/kube-state-metrics-config.yaml
 
 registries:
   create:

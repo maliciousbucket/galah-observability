@@ -77,3 +77,11 @@ jobs.kubernetes_scrape "default" {
 jobs.testbed_scrape "testbed" {
 	forward_to = [provider.self_hosted_stack.kubernetes.metrics_receiver]
 }
+
+prometheus.receive_http "k6" {
+  http {
+    listen_address = "0.0.0.0"
+    listen_port = 8081
+  }
+  forward_to = [provider.self_hosted_stack.kubernetes.metrics_receiver]
+}

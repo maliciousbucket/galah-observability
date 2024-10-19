@@ -84,26 +84,26 @@ declare "kubernetes_scrape" {
 	}
 
 	import.file "cadvisor" {
-	    filename = "/etc/alloy/modules/kubernetes/kubernetes/cadvisor.alloy"
+		filename = "/etc/alloy/modules/kubernetes/kubernetes/cadvisor.alloy"
 	}
 
 	cadvisor.integrations_scrape_cadvisor "cadvisor" {
-	    forward_to = argument.forward_to.value
+		forward_to = argument.forward_to.value
 	}
 
 	import.file "podmonitors" {
-        filename = "/etc/alloy/modules/kubernetes/metrics/podmonitors.alloy"
+		filename = "/etc/alloy/modules/kubernetes/metrics/podmonitors.alloy"
 	}
 
 	podmonitors.podmonitors_scrape "podmonitors" {
-	    forward_to = argument.forward_to.value
+		forward_to = argument.forward_to.value
 	}
 
 	import.file "service_monitors" {
-	    filename = "/etc/alloy/modules/kubernetes/metrics/servicemonitors.alloy"
+		filename = "/etc/alloy/modules/kubernetes/metrics/servicemonitors.alloy"
 	}
 
 	service_monitors.servicemonitors_scrape "service_monitors" {
-	     forward_to = argument.forward_to.value
+		forward_to = argument.forward_to.value
 	}
 }

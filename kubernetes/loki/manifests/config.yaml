@@ -68,7 +68,7 @@ data:
     3105\n  log_level: info\n\nmemberlist:\n  join_members:\n    - loki-memberlist.galah-logging.svc.cluster.local:7946\n\ncommon:\n
     \ compactor_address: http://loki.galah-logging.svc.cluster.local:3100\n  # TODO:
     Set to env\n#  instance_addr: 127.0.0.1\n  path_prefix: /var/loki\n\n  storage:\n
-    \   s3:\n      bucketnames: loki-data\n      endpoint: ${LOKI_S3_ENDPOINT:-minio.minio-store.svc:443}\n
+    \   s3:\n      bucketnames: loki-data,loki-ruler\n      endpoint: ${LOKI_S3_ENDPOINT:-minio.minio-store.svc:443}\n
     \     access_key_id: ${LOKI_S3_KEY_ID:-bucket}\n      secret_access_key: ${LOKI_S3_SECRET_ACCESS_KEY:-supersecret}\n
     \     insecure: ${LOKI_S3_INSECURE:-false}\n      s3forcepathstyle: true\n      http_config:\n
     \       insecure_skip_verify: true\n\n    # filesystem:\n    #   chunks_directory:

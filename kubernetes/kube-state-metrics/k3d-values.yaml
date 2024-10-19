@@ -1,4 +1,4 @@
-prometheusScrape: false
+prometheusScrape: true
 
 autosharding:
   enabled: false
